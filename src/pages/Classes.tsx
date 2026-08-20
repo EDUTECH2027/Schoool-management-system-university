@@ -61,8 +61,8 @@ export default function Classes() {
           <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
             <BookOpen size={28} className="text-slate-400" />
           </div>
-          <h3 className="text-slate-700 font-semibold text-lg mb-1">No classes yet</h3>
-          <p className="text-slate-400 text-sm max-w-xs">Go to Settings to create your first class.</p>
+          <h3 className="text-slate-700 font-semibold text-lg mb-1">No specialities yet</h3>
+          <p className="text-slate-400 text-sm max-w-xs">Go to Settings to create your first speciality.</p>
         </div>
       ) : (
         <>

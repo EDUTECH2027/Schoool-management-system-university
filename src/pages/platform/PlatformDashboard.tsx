@@ -86,8 +86,8 @@ export default function PlatformDashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState<CreateSchoolInput>({ name: '', email: '', phone: '', plan_id: '', admin_name: '', admin_email: '' });
-  const [createResult, setCreateResult] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [form, setForm] = useState<CreateSchoolInput>({ name: '', email: '', phone: '', plan_id: '', admin_name: '', admin_email: '', admin_whatsapp: '' });
+  const [createResult, setCreateResult] = useState<{ email: string; tempPassword: string; whatsapp: string; whatsappSent: boolean } | null>(null);
   const [error, setError] = useState('');
 
   const load = () => {
@@ -110,7 +110,7 @@ export default function PlatformDashboard() {
     try {
       const res = await api.platform.createSchool(form);
       setCreateResult(res.admin);
-      setForm({ name: '', email: '', phone: '', plan_id: '', admin_name: '', admin_email: '' });
+      setForm({ name: '', email: '', phone: '', plan_id: '', admin_name: '', admin_email: '', admin_whatsapp: '' });
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create school');
@@ -141,7 +141,7 @@ export default function PlatformDashboard() {
         <StatCard label="Total Students" value={stats?.totalStudents ?? 0} sub="Across all schools" icon={GraduationCap} color="green" />
         <StatCard label="Total Teachers" value={stats?.totalTeachers ?? 0} sub="Across all schools" icon={Users2}       color="purple" />
         <StatCard label="Total Parents"  value={stats?.totalParents ?? 0}  sub="Across all schools" icon={UserRound}    color="orange" />
-        <StatCard label="Total Revenue"  value={`$${(stats?.revenue ?? 0).toLocaleString()}`} sub="Active subscriptions (monthly)" icon={Wallet} color="blue" />
+        <StatCard label="Total Revenue"  value={`${(stats?.revenue ?? 0).toLocaleString()} FCFA`} sub="Active subscriptions (monthly)" icon={Wallet} color="blue" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -218,6 +218,11 @@ export default function PlatformDashboard() {
               {createResult && (
                 <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-xs text-green-800 dark:text-green-300">
                   School created. Admin login: <strong>{createResult.email}</strong> / <strong>{createResult.tempPassword}</strong>
+                  <div className="mt-1">
+                    {createResult.whatsappSent
+                      ? `Credentials sent via WhatsApp to ${createResult.whatsapp}.`
+                      : `WhatsApp message not sent (Bird WhatsApp not configured) — share these credentials with ${createResult.whatsapp} manually.`}
+                  </div>
                 </div>
               )}
               <div>
@@ -240,7 +245,7 @@ export default function PlatformDashboard() {
                 <select required value={form.plan_id} onChange={e => setForm({ ...form, plan_id: e.target.value })}
                   className="w-full mt-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
                   <option value="">Select plan</option>
-                  {plans.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price}/mo)</option>)}
+                  {plans.map(p => <option key={p.id} value={p.id}>{p.name} ({p.price.toLocaleString()} FCFA/mo)</option>)}
                 </select>
               </div>
               <div>
@@ -252,6 +257,12 @@ export default function PlatformDashboard() {
                 <label className="text-xs font-medium text-slate-600 dark:text-slate-300">Admin Email *</label>
                 <input required type="email" value={form.admin_email} onChange={e => setForm({ ...form, admin_email: e.target.value })}
                   className="w-full mt-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-300">Admin WhatsApp Number *</label>
+                <input required type="tel" placeholder="+237670000000" value={form.admin_whatsapp} onChange={e => setForm({ ...form, admin_whatsapp: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <p className="text-[11px] text-slate-400 mt-1">Include the country code (e.g. +237...) — login credentials are sent here.</p>
               </div>
               <button disabled={creating} type="submit"
                 className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-medium text-sm py-2.5 rounded-lg transition-colors">

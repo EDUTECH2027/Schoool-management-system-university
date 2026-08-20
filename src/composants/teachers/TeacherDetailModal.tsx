@@ -149,7 +149,7 @@ export default function TeacherDetailModal({ teacher, attendance, schedule, onCl
           <div className="grid grid-cols-4 gap-2.5">
             {[
               { label: t.teachers.subjects,       value: teacher.subjects.length  },
-              { label: lang === 'fr' ? 'Classes'  : 'Classes',  value: assignedClasses.length   },
+              { label: lang === 'fr' ? 'Spécialités'  : 'Specialities',  value: assignedClasses.length   },
               { label: t.teachers.yearsOfService, value: yearsOfService            },
               { label: t.teachers.periodsPerWeek, value: periodsPerWeek            },
             ].map(s => (
@@ -286,7 +286,7 @@ export default function TeacherDetailModal({ teacher, attendance, schedule, onCl
               {assignedClasses.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
-                    {lang === 'fr' ? 'Classes principales' : 'Class Teacher Assignments'}
+                    {lang === 'fr' ? 'Spécialités principales' : 'Speciality Teacher Assignments'}
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {assignedClasses.map(cls => {
@@ -324,7 +324,7 @@ export default function TeacherDetailModal({ teacher, attendance, schedule, onCl
               {/* All subjects taught (from schedule) */}
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
-                  {lang === 'fr' ? 'Matières enseignées' : 'Subjects Taught'}
+                  {lang === 'fr' ? 'Cours enseignés' : 'Courses Taught'}
                 </p>
                 <div className="space-y-2">
                   {[...new Set(schedule.map(s => `${s.className}|${s.subjectName}`))].map(key => {
@@ -456,7 +456,7 @@ export default function TeacherDetailModal({ teacher, attendance, schedule, onCl
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Users size={14} className="text-indigo-500" />
-                      {[...new Set(schedule.map(s => s.classId))].length} {lang === 'fr' ? 'classes' : 'classes'}
+                      {[...new Set(schedule.map(s => s.classId))].length} {lang === 'fr' ? 'spécialités' : 'specialities'}
                     </span>
                   </div>
 
@@ -488,7 +488,7 @@ export default function TeacherDetailModal({ teacher, attendance, schedule, onCl
                                 <td key={day.key} className="px-2 py-2 text-center">
                                   {entry ? (
                                     <div className={`rounded-lg px-2 py-1 ${subjectColors[entry.subjectName] ?? 'bg-slate-100 text-slate-700'}`}>
-                                      <p className="font-semibold leading-tight truncate max-w-[90px]">{entry.subjectName.split(' ')[0]}</p>
+                                      <p className="font-semibold leading-tight truncate max-w-[90px]">{entry.subjectName?.split(' ')[0] ?? '—'}</p>
                                       <p className="text-[10px] opacity-70 leading-tight">{entry.className}</p>
                                     </div>
                                   ) : (

@@ -62,7 +62,7 @@ export default function PlansBilling() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-slate-800 dark:text-slate-100">{p.name}</h3>
-                  <p className="text-2xl font-bold text-indigo-600 mt-1">${p.price}<span className="text-sm font-normal text-slate-400">/{p.billing_cycle === 'monthly' ? 'mo' : 'yr'}</span></p>
+                  <p className="text-2xl font-bold text-indigo-600 mt-1">{p.price.toLocaleString()} FCFA<span className="text-sm font-normal text-slate-400">/{p.billing_cycle === 'monthly' ? 'mo' : 'yr'}</span></p>
                 </div>
                 <button onClick={() => remove(p.id)} disabled={(p.school_count ?? 0) > 0}
                   className="text-slate-400 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed" title={(p.school_count ?? 0) > 0 ? 'In use by schools' : 'Delete plan'}>
@@ -90,7 +90,7 @@ export default function PlansBilling() {
               className="w-full mt-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-600 dark:text-slate-300">Price ($) *</label>
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-300">Price (FCFA) *</label>
             <input required type="number" min="0" value={form.price} onChange={e => setForm({ ...form, price: Number(e.target.value) })}
               className="w-full mt-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>

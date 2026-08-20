@@ -303,7 +303,7 @@ export default function Certificates() {
               value={filterClass} onChange={e => setFilterClass(e.target.value)}
               className="w-full mb-3 py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">{lbl('All classes', 'Toutes les classes')}</option>
+              <option value="">{lbl('All specialities', 'Toutes les spécialités')}</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <div className="flex-1 overflow-y-auto max-h-72 space-y-1 -mx-1 px-1">
@@ -317,7 +317,7 @@ export default function Certificates() {
                 >
                   <p className="font-medium">{s.firstName} {s.lastName}</p>
                   <p className={`text-xs ${studentId === s.id ? 'text-indigo-100' : 'text-slate-400'}`}>
-                    {s.studentNumber} · {s.className || lbl('No class', 'Aucune classe')}
+                    {s.studentNumber} · {s.className || lbl('No speciality', 'Aucune spécialité')}
                   </p>
                 </button>
               ))}

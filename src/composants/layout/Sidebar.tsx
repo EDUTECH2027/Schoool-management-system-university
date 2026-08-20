@@ -207,7 +207,7 @@ export default function Sidebar() {
           <p className="text-slate-400 text-xs">{t.nav.currentTerm}</p>
           <p className="text-white text-sm font-medium">
             {currentTerm
-              ? `${lang === 'fr' ? 'Trimestre' : 'Term'} ${currentTerm.name === 'first' ? 1 : currentTerm.name === 'second' ? 2 : 3}${currentAcademicYearLabel ? ` · ${currentAcademicYearLabel}` : ''}`
+              ? `${lang === 'fr' ? 'Semestre' : 'Semester'} ${currentTerm.name === 'first' ? 1 : currentTerm.name === 'second' ? 2 : 3}${currentAcademicYearLabel ? ` · ${currentAcademicYearLabel}` : ''}`
               : lang === 'fr' ? 'Chargement...' : 'Loading...'}
           </p>
         </div>

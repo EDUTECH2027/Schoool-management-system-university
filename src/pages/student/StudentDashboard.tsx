@@ -166,7 +166,7 @@ export default function StudentDashboard() {
     {
       key: 'score', label: 'Cumulative GPA', icon: Award, bg: 'bg-violet-200 dark:bg-violet-500/70',
       value: cumulativeGpa.toFixed(2), delta: gpaDelta, deltaSuffix: '',
-      sub: latestTerm ? `Term GPA: ${latestTerm.termGpa.toFixed(2)}` : 'No transcript data yet',
+      sub: latestTerm ? `Semester GPA: ${latestTerm.termGpa.toFixed(2)}` : 'No transcript data yet',
       to: '/student/marks',
     },
   ];
@@ -225,7 +225,7 @@ export default function StudentDashboard() {
             {/* Score chart */}
             <div className="sm:col-span-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Score by Subject</h2>
+                <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Score by Course</h2>
                 <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
                   <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />{prevTerm?.termName ?? 'Past'}</span>
                   <span className="inline-flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-300" />{latestTerm?.termName ?? 'Recent'}</span>
@@ -264,8 +264,8 @@ export default function StudentDashboard() {
                               }}
                             />
                           </div>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center max-w-12 truncate" title={e.subject_name}>
-                            {e.subject_name.split(' ')[0]}
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 text-center max-w-12 truncate" title={e.subject_name ?? ''}>
+                            {e.subject_name?.split(' ')[0] ?? '—'}
                           </span>
                         </div>
                       );
@@ -290,7 +290,7 @@ export default function StudentDashboard() {
                     ]} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-lg font-bold text-slate-800 dark:text-slate-100">{subjects.length}</span>
-                      <span className="text-[10px] text-slate-400">Subjects</span>
+                      <span className="text-[10px] text-slate-400">Courses</span>
                     </div>
                   </div>
                   <div className="mt-4 space-y-1.5 text-xs">

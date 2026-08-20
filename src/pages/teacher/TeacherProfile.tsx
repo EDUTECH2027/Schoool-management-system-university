@@ -28,9 +28,9 @@ export default function TeacherProfile() {
     ['Full Name', `${teacher.first_name} ${teacher.last_name}`],
     ['Email', teacher.email],
     ['Gender', teacher.gender ?? '—'],
-    ['Class Assigned', teacher.class_assigned ?? '—'],
+    ['Speciality Assigned', teacher.class_assigned ?? '—'],
     ['Joined', teacher.join_date ?? '—'],
-    ['Subjects', Array.isArray(teacher.subjects) ? teacher.subjects.join(', ') : teacher.subjects],
+    ['Courses', Array.isArray(teacher.subjects) ? teacher.subjects.join(', ') : teacher.subjects],
   ];
 
   return (

@@ -249,8 +249,8 @@ export default function Attendance() {
           <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
             <BookOpen size={28} className="text-slate-400" />
           </div>
-          <h3 className="text-slate-700 font-semibold text-lg mb-1">No classes yet</h3>
-          <p className="text-slate-400 text-sm max-w-xs">Add classes first before recording attendance.</p>
+          <h3 className="text-slate-700 font-semibold text-lg mb-1">No specialities yet</h3>
+          <p className="text-slate-400 text-sm max-w-xs">Add specialities first before recording attendance.</p>
         </div>
       )}
 
@@ -357,7 +357,7 @@ export default function Attendance() {
             </div>
           ) : classStudents.length === 0 ? (
             <div className="py-12 text-center text-slate-400 text-sm">
-              No students enrolled in this class yet.
+              No students enrolled in this speciality yet.
             </div>
           ) : (
             <div className="divide-y divide-slate-100">

@@ -172,7 +172,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl border border-slate-200 p-5 transition-transform duration-200 hover:-translate-y-1 hover:shadow-md cursor-default">
           <h3 className="text-slate-800 font-semibold mb-4">{t.classes.enrollment}</h3>
           {(!stats?.classSizes || stats.classSizes.length === 0) ? (
-            <p className="text-slate-400 text-sm">{t.classes.noClasses ?? 'No classes yet'}</p>
+            <p className="text-slate-400 text-sm">{t.classes.noClasses ?? 'No specialities yet'}</p>
           ) : (
             <div className="space-y-3 overflow-y-auto max-h-52">
               {stats.classSizes.map(cls => {

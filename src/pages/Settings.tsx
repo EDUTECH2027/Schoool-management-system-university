@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, CalendarDays, AlertTriangle, CheckCircle2, BookOpen, Trash2, Plus, Pencil, Check, Download, Database, FileUp, DollarSign } from 'lucide-react';
+import { Upload, X, CalendarDays, AlertTriangle, CheckCircle2, BookOpen, Trash2, Plus, Pencil, Check, Download, Database, FileUp, DollarSign, Lock, Unlock } from 'lucide-react';
 import type { Subject } from '../types';
-import { api, type ClassRecord, type Teacher as TeacherRaw, type AcademicYear, type Term } from '../api/client';
+import { api, type ClassRecord, type Teacher as TeacherRaw, type AcademicYear, type Term, type MarksSession } from '../api/client';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useBranding } from '../context/BrandingContext';
 
@@ -164,6 +164,45 @@ export default function Settings() {
   const [newTerm, setNewTerm] = useState({ academic_year_id: '', name: 'first' as 'first'|'second'|'third', start_date: '', end_date: '', is_current: false });
   const [calSaving, setCalSaving] = useState(false);
 
+  // Marks-filling sessions state
+  const [marksSessions,  setMarksSessions]  = useState<MarksSession[]>([]);
+  const [currentSession, setCurrentSession] = useState<{ isOpen: boolean; session: MarksSession | null }>({ isOpen: false, session: null });
+  const toLocalInput = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  const [newSession, setNewSession] = useState(() => ({
+    label: '', start: toLocalInput(new Date()), end: toLocalInput(new Date(Date.now() + 60 * 60 * 1000)),
+  }));
+  const [sessionSaving, setSessionSaving] = useState(false);
+
+  const loadMarksSessionState = () =>
+    Promise.all([api.getMarksSessions(), api.getCurrentMarksSession()])
+      .then(([list, current]) => { setMarksSessions(list); setCurrentSession(current); })
+      .catch(console.error);
+
+  const openMarksSession = async () => {
+    if (!newSession.start || !newSession.end) return;
+    setSessionSaving(true);
+    try {
+      await api.openMarksSession({
+        label: newSession.label.trim() || undefined,
+        startAt: new Date(newSession.start).toISOString(),
+        endAt: new Date(newSession.end).toISOString(),
+      });
+      setNewSession({ label: '', start: toLocalInput(new Date()), end: toLocalInput(new Date(Date.now() + 60 * 60 * 1000)) });
+      await loadMarksSessionState();
+    } catch (err) { console.error(err); }
+    setSessionSaving(false);
+  };
+
+  const closeMarksSessionNow = async (id: string) => {
+    try {
+      await api.closeMarksSession(id);
+      await loadMarksSessionState();
+    } catch (err) { console.error(err); }
+  };
+
   useEffect(() => {
     Promise.all([
       api.getClasses(),
@@ -195,6 +234,9 @@ export default function Settings() {
       }
     }).catch(console.error);
   }, [setSchoolInfo, setSchoolName]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadMarksSessionState(); }, []);
 
   const setCurrentYear = async (id: string) => {
     const found = academicYears.find(y => y.id === id);
@@ -242,7 +284,7 @@ export default function Settings() {
   const addClassEntry = async () => {
     setClassError(null);
     if (!newCls.name.trim()) {
-      setClassError('Class name is required.');
+      setClassError('Speciality name is required.');
       return;
     }
     const teacher = teachersList.find(tc => tc.id === newCls.teacherId);
@@ -389,7 +431,7 @@ export default function Settings() {
     const data = await api.getStudents({ limit: '10000' }).catch(console.error);
     if (!data) return;
     downloadFile('students.csv', toCSV(
-      ['Student Number','First Name','Last Name','Date of Birth','Gender','Class','Grade Level','Guardian Name','Guardian Phone','Admission Date','Active'],
+      ['Student Number','First Name','Last Name','Date of Birth','Gender','Speciality','Grade Level','Guardian Name','Guardian Phone','Admission Date','Active'],
       data.map(s => [s.student_number,s.first_name,s.last_name,s.date_of_birth,s.gender,s.class_name,s.grade_level_name,s.guardian_name,s.guardian_phone,s.admission_date,s.is_active ? 'Yes' : 'No']),
     ));
   };
@@ -398,7 +440,7 @@ export default function Settings() {
     const data = await api.getTeachers().catch(console.error);
     if (!data) return;
     downloadFile('teachers.csv', toCSV(
-      ['First Name','Last Name','Email','Phone','Gender','Subjects','Class Assigned','Qualification','Join Date','Active'],
+      ['First Name','Last Name','Email','Phone','Gender','Courses','Speciality Assigned','Qualification','Join Date','Active'],
       data.map(t => [t.first_name,t.last_name,t.email,t.phone,t.gender,t.subjects.join('; '),t.class_assigned ?? '',t.qualification,t.join_date,t.is_active ? 'Yes' : 'No']),
     ));
   };
@@ -407,7 +449,7 @@ export default function Settings() {
     const data = await api.getClasses().catch(console.error);
     if (!data) return;
     downloadFile('classes.csv', toCSV(
-      ['Class Name','Grade Level','Room','Capacity','Enrolled','Class Teacher'],
+      ['Speciality Name','Grade Level','Room','Capacity','Enrolled','Speciality Teacher'],
       data.map(c => [c.name,c.grade_level_name,c.room,c.capacity,c.enrolled,c.class_teacher_name ?? '']),
     ));
   };
@@ -416,7 +458,7 @@ export default function Settings() {
     const data = await api.getMarks().catch(console.error);
     if (!data) return;
     downloadFile('marks.csv', toCSV(
-      ['Student Name','Subject','CA Score','Exam Score','Total Score','Grade','Remark'],
+      ['Student Name','Course','CA Score','Exam Score','Total Score','Grade','Remark'],
       data.map(m => [m.student_name,m.subject_name,m.ca_score,m.exam_score,m.total_score,m.grade,m.remark]),
     ));
   };
@@ -425,7 +467,7 @@ export default function Settings() {
     const data = await api.getFees().catch(console.error);
     if (!data) return;
     downloadFile('fees.csv', toCSV(
-      ['Student Name','Student Number','Class','Fee Name','Academic Year','Amount Due','Amount Paid','Balance','Status','Due Date'],
+      ['Student Name','Student Number','Speciality','Fee Name','Academic Year','Amount Due','Amount Paid','Balance','Status','Due Date'],
       data.map(f => [f.student_name,f.student_number,f.class_name,f.fee_name,f.academic_year,f.amount_due,f.amount_paid,f.balance,f.status,f.due_date ?? '']),
     ));
   };
@@ -467,7 +509,7 @@ export default function Settings() {
           // Keep localStorage copy for legacy compatibility
           localStorage.setItem('subjects', JSON.stringify(backup.subjects));
           setSubjectList(backup.subjects);
-          restored.push(`${backup.subjects.length} ${lbl('subjects', 'matières')}`);
+          restored.push(`${backup.subjects.length} ${lbl('courses', 'cours')}`);
         }
         if (backup.feeInstallments) {
           localStorage.setItem('fee_installments', JSON.stringify(backup.feeInstallments));
@@ -546,7 +588,7 @@ export default function Settings() {
   };
 
   const downloadStudentTemplate = () => downloadFile('students-template.csv', toCSV(
-    ['Student Number', 'First Name', 'Last Name', 'Date of Birth', 'Gender', 'Class', 'Grade Level', 'Guardian Name', 'Guardian Phone', 'Admission Date', 'Active'],
+    ['Student Number', 'First Name', 'Last Name', 'Date of Birth', 'Gender', 'Speciality', 'Grade Level', 'Guardian Name', 'Guardian Phone', 'Admission Date', 'Active'],
     [],
   ));
 
@@ -1068,9 +1110,9 @@ export default function Settings() {
             <BookOpen size={16} className="text-indigo-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800">{lbl('Classes', 'Classes')}</h3>
+            <h3 className="font-semibold text-slate-800">{lbl('Specialities', 'Spécialités')}</h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              {lbl('Create and manage classes — they appear automatically on the Classes page.', 'Créez et gérez les classes — elles apparaissent automatiquement sur la page Classes.')}
+              {lbl('Create and manage specialities — they appear automatically on the Specialities page.', 'Créez et gérez les spécialités — elles apparaissent automatiquement sur la page Spécialités.')}
             </p>
           </div>
         </div>
@@ -1078,7 +1120,7 @@ export default function Settings() {
         {/* Class list */}
         <div className="space-y-2 mb-4">
           {classList.length === 0 && (
-            <p className="text-sm text-slate-400 py-2">{lbl('No classes yet. Add one below.', 'Aucune classe pour l\'instant. Ajoutez-en une ci-dessous.')}</p>
+            <p className="text-sm text-slate-400 py-2">{lbl('No specialities yet. Add one below.', 'Aucune spécialité pour l\'instant. Ajoutez-en une ci-dessous.')}</p>
           )}
           {classList.map(c => (
             <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -1087,7 +1129,7 @@ export default function Settings() {
                   <input
                     value={editCls.name}
                     onChange={e => setEditCls(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder={lbl('Class name', 'Nom de la classe')}
+                    placeholder={lbl('Speciality name', 'Nom de la spécialité')}
                     className="flex-1 py-1.5 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                   />
                   <input
@@ -1126,7 +1168,7 @@ export default function Settings() {
                   <button onClick={() => startEditClass(c)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title={t.common.edit}>
                     <Pencil size={14} />
                   </button>
-                  <button onClick={() => deleteClassEntry(c.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t.settings.deleteSubject}>
+                  <button onClick={() => deleteClassEntry(c.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={lbl('Delete speciality', 'Supprimer la spécialité')}>
                     <Trash2 size={14} />
                   </button>
                 </>
@@ -1143,7 +1185,7 @@ export default function Settings() {
               value={newCls.name}
               onChange={e => setNewCls(prev => ({ ...prev, name: e.target.value }))}
               onKeyDown={e => { if (e.key === 'Enter') addClassEntry(); }}
-              placeholder={lbl('Class name (e.g. Form 1A)', 'Nom de la classe (ex : 6ème A)')}
+              placeholder={lbl('Speciality name (e.g. Form 1A)', 'Nom de la spécialité (ex : 6ème A)')}
               className="flex-1 py-1.5 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             />
           </div>
@@ -1167,7 +1209,7 @@ export default function Settings() {
               onChange={e => setNewCls(prev => ({ ...prev, teacherId: e.target.value }))}
               className="flex-1 py-1.5 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
-              <option value="">{lbl('Class teacher (optional)', 'Enseignant(e) (optionnel)')}</option>
+              <option value="">{lbl('Speciality teacher (optional)', 'Enseignant(e) (optionnel)')}</option>
               {teachersList.map(tc => <option key={tc.id} value={tc.id}>{tc.first_name} {tc.last_name}</option>)}
             </select>
             <button
@@ -1176,7 +1218,7 @@ export default function Settings() {
               className="shrink-0 flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
             >
               <Plus size={14} />
-              {lbl('Add Class', 'Ajouter')}
+              {lbl('Add Speciality', 'Ajouter')}
             </button>
           </div>
           {classError && (
@@ -1208,7 +1250,7 @@ export default function Settings() {
             {([
               { label: lbl('Students', 'Élèves'),   fn: exportStudentsCSV },
               { label: lbl('Teachers', 'Enseignants'), fn: exportTeachersCSV },
-              { label: lbl('Classes', 'Classes'),   fn: exportClassesCSV  },
+              { label: lbl('Specialities', 'Spécialités'),   fn: exportClassesCSV  },
               { label: lbl('Marks', 'Notes'),       fn: exportMarksCSV    },
               { label: lbl('Fees', 'Frais'),        fn: exportFeesCSV     },
             ] as const).map(({ label, fn }) => (
@@ -1258,7 +1300,7 @@ export default function Settings() {
               {lbl('Drop a .json backup here, or click to browse', 'Déposez un fichier .json ici, ou cliquez pour parcourir')}
             </p>
             <p className="text-xs text-slate-400">
-              {lbl('Restores: subjects, fee schedule, branding & school info', 'Restaure : matières, calendrier des frais, identité & infos école')}
+              {lbl('Restores: courses, fee schedule, branding & school info', 'Restaure : cours, calendrier des frais, identité & infos école')}
             </p>
           </div>
 
@@ -1325,7 +1367,7 @@ export default function Settings() {
                 : lbl('Drop a .csv of students here, or click to browse', 'Déposez un .csv d\'élèves ici, ou cliquez pour parcourir')}
             </p>
             <p className="text-xs text-slate-400">
-              {lbl('Columns: Student Number, First/Last Name, DOB, Gender, Class, Grade Level, Guardian Name/Phone, Admission Date, Active', 'Colonnes : Matricule, Prénom/Nom, Date de naissance, Sexe, Classe, Niveau, Nom/Téléphone du parent, Date d\'inscription, Actif')}
+              {lbl('Columns: Student Number, First/Last Name, DOB, Gender, Speciality, Grade Level, Guardian Name/Phone, Admission Date, Active', 'Colonnes : Matricule, Prénom/Nom, Date de naissance, Sexe, Spécialité, Niveau, Nom/Téléphone du parent, Date d\'inscription, Actif')}
             </p>
           </div>
 
@@ -1407,10 +1449,10 @@ export default function Settings() {
 
         {/* Terms */}
         <div>
-          <p className="text-sm font-medium text-slate-600 mb-2">{lbl('Terms', 'Trimestres')}</p>
+          <p className="text-sm font-medium text-slate-600 mb-2">{lbl('Semesters', 'Semestres')}</p>
           {allTerms.length === 0 && (
             <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-3">
-              {lbl('No terms yet — assessments cannot be saved without at least one term.', 'Aucun trimestre — les notes ne peuvent pas être sauvegardées sans trimestre.')}
+              {lbl('No semesters yet — assessments cannot be saved without at least one semester.', 'Aucun semestre — les notes ne peuvent pas être sauvegardées sans semestre.')}
             </p>
           )}
           <div className="space-y-2 mb-3">
@@ -1419,7 +1461,7 @@ export default function Settings() {
               const termNum = tm.name === 'first' ? 1 : tm.name === 'second' ? 2 : 3;
               return (
                 <div key={tm.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-sm">
-                  <span className="font-medium text-slate-700">{lbl(`Term ${termNum}`, `Trimestre ${termNum}`)} <span className="text-slate-400 font-normal">({yearLabel})</span></span>
+                  <span className="font-medium text-slate-700">{lbl(`Semester ${termNum}`, `Semestre ${termNum}`)} <span className="text-slate-400 font-normal">({yearLabel})</span></span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400">{tm.start_date} → {tm.end_date}</span>
                     {tm.is_current ? (
@@ -1441,9 +1483,9 @@ export default function Settings() {
             </select>
             <select value={newTerm.name} onChange={e => setNewTerm(p => ({ ...p, name: e.target.value as 'first'|'second'|'third' }))}
               className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="first">{lbl('Term 1', 'Trimestre 1')}</option>
-              <option value="second">{lbl('Term 2', 'Trimestre 2')}</option>
-              <option value="third">{lbl('Term 3', 'Trimestre 3')}</option>
+              <option value="first">{lbl('Semester 1', 'Semestre 1')}</option>
+              <option value="second">{lbl('Semester 2', 'Semestre 2')}</option>
+              <option value="third">{lbl('Semester 3', 'Semestre 3')}</option>
             </select>
             <input type="date" value={newTerm.start_date} onChange={e => setNewTerm(p => ({ ...p, start_date: e.target.value }))}
               className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -1451,10 +1493,101 @@ export default function Settings() {
               className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <button onClick={addTerm} disabled={calSaving || academicYears.length === 0}
               className="flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm px-3 py-1.5 rounded-lg transition-colors">
-              <Plus size={14} /> {lbl('Add Term', 'Ajouter')}
+              <Plus size={14} /> {lbl('Add Semester', 'Ajouter')}
             </button>
           </div>
         </div>
+      </div>
+
+      {/* ── Marks Filling Sessions ────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+            <Lock size={18} className="text-indigo-500" />
+            {lbl('Marks Filling Sessions', 'Sessions de saisie des notes')}
+          </h3>
+          {currentSession.isOpen && currentSession.session ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">
+              <Unlock size={12} /> {lbl('Open until', "Ouvert jusqu'au")} {new Date(currentSession.session.end_at).toLocaleString()}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">
+              <Lock size={12} /> {lbl('Closed', 'Fermé')}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-slate-400">
+          {lbl(
+            'While a session is open, teachers can submit marks from their portal. Outside any open window, marks filling is locked — admins entering marks here are never affected.',
+            "Pendant qu'une session est ouverte, les enseignants peuvent saisir les notes depuis leur portail. En dehors de toute session, la saisie est verrouillée — les administrateurs saisissant les notes ici ne sont jamais concernés."
+          )}
+        </p>
+
+        {currentSession.isOpen && currentSession.session && (
+          <button
+            onClick={() => closeMarksSessionNow(currentSession.session!.id)}
+            className="flex items-center gap-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Lock size={13} /> {lbl('Close Now', 'Fermer maintenant')}
+          </button>
+        )}
+
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 items-end">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{lbl('Label (optional)', 'Libellé (optionnel)')}</label>
+            <input
+              value={newSession.label}
+              onChange={e => setNewSession(p => ({ ...p, label: e.target.value }))}
+              placeholder={lbl('e.g. Semester 1 CA', 'ex. CC Semestre 1')}
+              className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{lbl('Opens', 'Ouvre')}</label>
+            <input
+              type="datetime-local"
+              value={newSession.start}
+              onChange={e => setNewSession(p => ({ ...p, start: e.target.value }))}
+              className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">{lbl('Closes', 'Ferme')}</label>
+            <input
+              type="datetime-local"
+              value={newSession.end}
+              onChange={e => setNewSession(p => ({ ...p, end: e.target.value }))}
+              className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <button
+            onClick={openMarksSession}
+            disabled={sessionSaving || !newSession.start || !newSession.end}
+            className="flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm px-3 py-1.5 rounded-lg transition-colors"
+          >
+            <Plus size={14} /> {lbl('Open Session', 'Ouvrir')}
+          </button>
+        </div>
+
+        {marksSessions.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-slate-500 mb-2">{lbl('History', 'Historique')}</p>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {marksSessions.map(s => {
+                const isOpenNow = new Date(s.start_at) <= new Date() && new Date() <= new Date(s.end_at);
+                return (
+                  <div key={s.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-sm">
+                    <span className="font-medium text-slate-700">{s.label || lbl('Untitled session', 'Session sans titre')}</span>
+                    <span className="text-xs text-slate-400">
+                      {new Date(s.start_at).toLocaleString()} → {new Date(s.end_at).toLocaleString()}
+                      {isOpenNow && <span className="ml-2 text-emerald-600 font-medium">{lbl('· open', '· ouvert')}</span>}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Grading Scale ─────────────────────────────────────── */}

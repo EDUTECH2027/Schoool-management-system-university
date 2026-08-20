@@ -5,6 +5,7 @@ import StudentProfile    from '../pages/student/StudentProfile';
 import StudentMarks      from '../pages/student/StudentMarks';
 import StudentAttendance from '../pages/student/StudentAttendance';
 import StudentTimetable  from '../pages/student/StudentTimetable';
+import StudentFees       from '../pages/student/StudentFees';
 
 export default function StudentRoutes() {
   return (
@@ -17,6 +18,7 @@ export default function StudentRoutes() {
         <Route path="marks"      element={<StudentMarks      />} />
         <Route path="attendance" element={<StudentAttendance />} />
         <Route path="timetable"  element={<StudentTimetable  />} />
+        <Route path="fees"       element={<StudentFees       />} />
       </Route>
       <Route path="*" element={<Navigate to="/student/dashboard" replace />} />
     </Routes>

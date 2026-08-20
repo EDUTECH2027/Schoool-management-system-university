@@ -48,12 +48,12 @@ export default function Reports() {
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-          <h3 className="text-slate-800 dark:text-slate-100 font-semibold mb-4">Revenue by Plan <span className="text-slate-400 font-normal text-sm">(${totalRevenue.toLocaleString()} total/mo)</span></h3>
+          <h3 className="text-slate-800 dark:text-slate-100 font-semibold mb-4">Revenue by Plan <span className="text-slate-400 font-normal text-sm">({totalRevenue.toLocaleString()} FCFA total/mo)</span></h3>
           <div className="space-y-2">
             {byPlan.map(p => (
               <div key={p.plan_name} className="flex items-center justify-between text-sm">
                 <span className="text-slate-600 dark:text-slate-300">{p.plan_name} ({p.school_count} schools)</span>
-                <span className="font-medium text-slate-800 dark:text-slate-100">${p.revenue.toLocaleString()}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-100">{p.revenue.toLocaleString()} FCFA</span>
               </div>
             ))}
             {byPlan.length === 0 && <p className="text-slate-400 text-sm">No data yet</p>}

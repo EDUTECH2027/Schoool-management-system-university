@@ -38,7 +38,7 @@ function monthGrid(anchor: Date): (Date | null)[][] {
 }
 
 function initials(name: string) {
-  return name.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2);
+  return (name || '').split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2);
 }
 
 export default function TeacherDashboard() {
@@ -104,7 +104,7 @@ export default function TeacherDashboard() {
 
   const overviewTiles = [
     { key: 'students', label: 'Total Students', value: totalStudents, icon: Users, bar: 100, barColor: 'bg-rose-500' },
-    { key: 'classes', label: 'My Classes', value: classes.length, icon: Layers, bar: 100, barColor: 'bg-orange-400' },
+    { key: 'classes', label: 'My Specialities', value: classes.length, icon: Layers, bar: 100, barColor: 'bg-orange-400' },
     { key: 'periods', label: "Today's Periods", value: todaysSchedule.length, icon: CalendarIcon, bar: pct(periodsDone, todaysSchedule.length), barColor: 'bg-yellow-400' },
     { key: 'recorded', label: 'Marks Recorded', value: marksRecorded, icon: FileText, bar: pct(studentsWithMarks, totalStudents), barColor: 'bg-violet-500' },
     { key: 'pending', label: 'Students Pending Marks', value: studentsPending, icon: ClipboardCheck, bar: pct(studentsPending, totalStudents), barColor: 'bg-slate-400' },
@@ -120,7 +120,7 @@ export default function TeacherDashboard() {
   const topStudents = useMemo(() => {
     const totals = new Map<string, { name: string; sum: number; count: number }>();
     marksByClass.forEach(rows => rows.forEach(m => {
-      const cur = totals.get(m.student_id) ?? { name: m.student_name, sum: 0, count: 0 };
+      const cur = totals.get(m.student_id) ?? { name: m.student_name || 'Student', sum: 0, count: 0 };
       cur.sum += m.total_score;
       cur.count += 1;
       totals.set(m.student_id, cur);
@@ -138,7 +138,7 @@ export default function TeacherDashboard() {
       const withMarks = new Set(rows.filter(m => m.total_score > 0).map(m => m.student_id)).size;
       const pending = Math.max((c.enrolled ?? 0) - withMarks, 0);
       if (pending > 0) {
-        list.push({ id: `marks-${c.id}`, icon: FileText, color: 'amber', title: `Enter marks for ${c.name}`, subtitle: `${pending} student${pending === 1 ? '' : 's'} still need grades this term`, to: '/teacher/marks' });
+        list.push({ id: `marks-${c.id}`, icon: FileText, color: 'amber', title: `Enter marks for ${c.name}`, subtitle: `${pending} student${pending === 1 ? '' : 's'} still need grades this semester`, to: '/teacher/marks' });
       }
       if (!attendanceByClass.get(c.id)?.length) {
         list.push({ id: `att-${c.id}`, icon: ClipboardCheck, color: 'sky', title: `Take attendance for ${c.name}`, subtitle: 'Not yet recorded today', to: '/teacher/attendance' });
@@ -181,7 +181,7 @@ export default function TeacherDashboard() {
           {/* Assignment overview */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Class Overview</h2>
+              <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Speciality Overview</h2>
               <Link to="/teacher/marks" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">Marks &amp; Assessments</Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -274,7 +274,7 @@ export default function TeacherDashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-[10px] font-semibold uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-slate-700">
-                      <th className="pb-2 font-semibold">Subject</th>
+                      <th className="pb-2 font-semibold">Course</th>
                       <th className="pb-2 font-semibold">Date</th>
                       <th className="pb-2 font-semibold">Time</th>
                       <th className="pb-2 font-semibold">Venue</th>

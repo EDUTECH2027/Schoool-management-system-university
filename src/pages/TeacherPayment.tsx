@@ -105,7 +105,7 @@ const openPayslip = (r: PayrollRecord, monthLabel: string, schoolName: string, s
   </div>
   <div class="meta">
     <div class="meta-cell"><label>Employee</label><p>${fullName}</p></div>
-    <div class="meta-cell"><label>Subject</label><p>${subject}</p></div>
+    <div class="meta-cell"><label>Course</label><p>${subject}</p></div>
     <div class="meta-cell"><label>Period</label><p>${monthLabel}</p></div>
     <div class="meta-cell"><label>Status</label><span class="status-${r.status}">${r.status.toUpperCase()}</span></div>
   </div>
@@ -247,7 +247,7 @@ export default function TeacherPayment() {
   // Export all CSV
   const exportGlobalCSV = () => {
     const header = [
-      'Teacher', 'Subject', 'Hourly Rate', 'Contracted Hrs', 'Base Allowance',
+      'Teacher', 'Course', 'Hourly Rate', 'Contracted Hrs', 'Base Allowance',
       'Abs. Deduction/day', 'Late Deduction', 'Hrs Worked', 'Absences', 'Late',
       'Gross (FCFA)', 'Deductions (FCFA)', 'Allowance (FCFA)', 'Bonus (FCFA)', 'Net Pay (FCFA)', 'Status',
     ];
@@ -274,7 +274,7 @@ export default function TeacherPayment() {
     const fullName = `${r.teacher?.first_name ?? ''} ${r.teacher?.last_name ?? ''}`.trim();
     const csvRows = [
       ['PAYSLIP', ''], ['School', schoolName], ['Period', mLabel], ['', ''],
-      ['Employee', fullName], ['Subject', getSubject(r)], ['Status', r.status.toUpperCase()], ['', ''],
+      ['Employee', fullName], ['Course', getSubject(r)], ['Status', r.status.toUpperCase()], ['', ''],
       ['PAYMENT CRITERIA', ''],
       ['Hourly Rate (FCFA)', r.hourly_rate], ['Contracted Hours / Month', r.contracted_hours],
       ['Base Allowance (FCFA)', r.base_allowance], ['Absence Deduction / day (FCFA)', r.absence_deduction],

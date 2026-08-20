@@ -35,7 +35,7 @@ export default function ParentChildMarks() {
       {avg !== null && (
         <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-xl p-4">
           <p className="text-2xl font-bold text-violet-600">{avg}% Overall Average</p>
-          <p className="text-sm text-violet-600 dark:text-violet-400">{marks.length} subjects</p>
+          <p className="text-sm text-violet-600 dark:text-violet-400">{marks.length} courses</p>
         </div>
       )}
 
@@ -43,13 +43,13 @@ export default function ParentChildMarks() {
         <table className="w-full text-sm">
           <thead className="bg-slate-50 dark:bg-slate-700/50">
             <tr>
-              {['Subject', 'CA', 'Exam', 'Total', 'Grade'].map(h => (
+              {['Course', 'CA', 'Exam', 'Total', 'Grade'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-            {marks.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No marks for this term.</td></tr>}
+            {marks.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No marks for this semester.</td></tr>}
             {marks.map(m => (
               <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{m.subject_name}</td>

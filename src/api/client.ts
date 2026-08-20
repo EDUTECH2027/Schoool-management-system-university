@@ -189,6 +189,13 @@ export const api = {
     request<{ saved: number }>('POST', '/marks', records),
   updateMark:  (id: string, data: Partial<Mark>) => request<Mark>('PUT', `/marks/${id}`, data),
 
+  // ── Marks filling sessions ─────────────────────────────────────────
+  getMarksSessions:      () => request<MarksSession[]>('GET', '/marks-sessions'),
+  getCurrentMarksSession:() => request<{ isOpen: boolean; session: MarksSession | null }>('GET', '/marks-sessions/current'),
+  openMarksSession:      (data: { label?: string; startAt: string; endAt: string }) =>
+    request<MarksSession>('POST', '/marks-sessions', data),
+  closeMarksSession:     (id: string) => request<MarksSession>('PATCH', `/marks-sessions/${id}/close`),
+
   // ── Transcripts ──────────────────────────────────────────────────
   getTranscripts:      (params?: Record<string, string>) =>
     request<Transcript[]>('GET', `/transcripts${toQS(params)}`),
@@ -325,6 +332,14 @@ export const api = {
   portalStudentTranscript:   () => request<Transcript>('GET', '/portal/student/transcript'),
   portalStudentBehavior:     () => request<BehaviorRecord[]>('GET', '/portal/student/behavior'),
   portalStudentGpaSummary:   () => request<GpaSummary>('GET', '/portal/student/gpa-summary'),
+  portalStudentFees:         () => request<FeeRecord[]>('GET', '/portal/student/fees'),
+  portalStudentUploadDocument: (file: File, title?: string) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    if (title) fd.append('title', title);
+    return uploadRequest<{ id: string; title: string; file_url: string; created_at: string }>('/portal/student/documents', fd);
+  },
+  portalStudentDeleteDocument: (id: string) => request<void>('DELETE', `/portal/student/documents/${id}`),
 
   // ── Portal: Parent ────────────────────────────────────────────────
   portalParentProfile:        () => request<Parent>('GET', '/portal/parent/profile'),
@@ -348,7 +363,7 @@ export const api = {
     getSchool:       (id: string) => request<PlatformSchool>('GET', `/platform/schools/${id}`),
     getSchoolSummary:(id: string) => request<SchoolSummary>('GET', `/platform/schools/${id}/summary`),
     createSchool:    (data: CreateSchoolInput) =>
-      request<{ school: PlatformSchool; admin: { email: string; tempPassword: string } }>('POST', '/platform/schools', data),
+      request<{ school: PlatformSchool; admin: { email: string; tempPassword: string; whatsapp: string; whatsappSent: boolean } }>('POST', '/platform/schools', data),
     updateSchool:    (id: string, data: Partial<PlatformSchool>) => request<PlatformSchool>('PUT', `/platform/schools/${id}`, data),
     activateSchool:  (id: string) => request<PlatformSchool>('PATCH', `/platform/schools/${id}/activate`),
     deactivateSchool:(id: string) => request<PlatformSchool>('PATCH', `/platform/schools/${id}/deactivate`),
@@ -431,6 +446,7 @@ export interface AuthUser {
 export interface School { id: string; name: string; code: string; address: string; phone: string; email: string; head_teacher: string; motto: string; logo_url?: string; }
 export interface AcademicYear { id: string; label: string; start_date: string; end_date: string; is_current: number; }
 export interface Term { id: string; academic_year_id: string; name: string; start_date: string; end_date: string; is_current: number; }
+export interface MarksSession { id: string; label: string | null; start_at: string; end_at: string; created_by: string | null; created_at: string; }
 export interface GradeLevel { id: string; name: string; sort_order: number; }
 export interface Subject { id: string; name: string; code: string; coefficient: number; credit_hours: number; }
 export interface Teacher { id: string; first_name: string; last_name: string; email: string; phone: string; gender: string; subjects: string[]; class_assigned?: string; qualification: string; join_date: string; is_active: number; documents?: { id: string; title: string; file_url: string; created_at: string }[]; }
@@ -451,7 +467,7 @@ export interface AttendanceRecord { id: string; student_id: string; student_name
 export interface AttendanceStat { student_id: string; student_name: string; present: number; absent: number; late: number; excused: number; total: number; }
 export interface TeacherAttendanceRecord { id: string; teacher_id: string; date: string; status: string; remarks?: string; first_name: string; last_name: string; }
 export interface ScheduleEntry { id: string; teacher_id: string; day: string; period_key: string; period_label: string; time: string; class_id: string; class_name: string; subject_name: string; room: string; first_name?: string; last_name?: string; teacher_name?: string; }
-export interface Mark { id: string; student_id: string; student_name: string; subject_id: string; subject_name: string; term_id: string; class_id: string; ca_score: number; exam_score: number; total_score: number; grade: string; remark: string; }
+export interface Mark { id: string; student_id: string; student_name: string; subject_id: string; subject_name: string; term_id: string; class_id: string; ca_score: number; exam_score: number; total_score: number; grade: string; remark: string; resit_score: number | null; resit_grade: string | null; }
 export interface Transcript { id: string; student_id: string; student_name: string; student_number: string; class_name: string; grade_level_name?: string; cumulative_gpa: number; total_credit_hours: number; total_quality_points: number; terms_included: number; status: string; generated_at: string | null; entries: TranscriptEntry[]; }
 export interface TranscriptEntry { term_id: string; term_name: string; academic_year: string; subject_id: string; subject_name: string; ca_score: number; exam_score: number; total_score: number; credit_hours: number; grade: string; grade_points: number; remark?: string; }
 export interface GpaSummary {
@@ -490,7 +506,7 @@ export interface CertificateInput {
 // ── Platform (Super Admin) types ──────────────────────────────────────────────
 export interface PlatformSchool {
   id: string; name: string; code?: string | null; address?: string | null; phone?: string | null;
-  email: string; admin_name: string; admin_email: string; plan_id: string;
+  email: string; admin_name: string; admin_email: string; admin_whatsapp?: string | null; plan_id: string;
   status: 'active' | 'inactive' | 'suspended' | 'archived';
   subscription_started?: string; subscription_expiry?: string | null;
   created_at: string; updated_at: string;
@@ -499,7 +515,7 @@ export interface PlatformSchool {
 }
 export interface CreateSchoolInput {
   name: string; email: string; phone?: string; address?: string; plan_id: string;
-  admin_name: string; admin_email: string;
+  admin_name: string; admin_email: string; admin_whatsapp: string;
 }
 export interface SchoolSummary {
   students: number; teachers: number; classes: number;

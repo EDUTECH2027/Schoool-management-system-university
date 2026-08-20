@@ -767,7 +767,7 @@ export default function Timetable() {
     doc.setFont('helvetica', 'normal');
     doc.text(new Date().toLocaleDateString('en-GB'), 10, pageH - 5);
     if (cls?.classTeacherName) {
-      doc.text(`${lbl('Class teacher', 'Prof. principal')}: ${cls.classTeacherName}`, 287, pageH - 5, { align: 'right' });
+      doc.text(`${lbl('Speciality teacher', 'Enseignant de spécialité')}: ${cls.classTeacherName}`, 287, pageH - 5, { align: 'right' });
     }
     doc.save(`${(cls?.name ?? 'timetable').replace(/\s+/g, '-')}-timetable.pdf`);
   };
@@ -787,8 +787,8 @@ export default function Timetable() {
         <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
           <Calendar size={28} className="text-slate-400" />
         </div>
-        <h3 className="text-slate-700 font-semibold text-lg mb-1">No classes yet</h3>
-        <p className="text-slate-400 text-sm max-w-xs">Add classes first before building the timetable.</p>
+        <h3 className="text-slate-700 font-semibold text-lg mb-1">No specialities yet</h3>
+        <p className="text-slate-400 text-sm max-w-xs">Add specialities first before building the timetable.</p>
       </div>
     );
   }
@@ -859,7 +859,7 @@ export default function Timetable() {
 
       {/* ── Subject legend ──────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-xs text-slate-400">{lbl('Subjects:', 'Matières :')}</span>
+        <span className="text-xs text-slate-400">{lbl('Courses:', 'Cours :')}</span>
         {subjects.map(s => (
           <span key={s.id} className={`text-xs px-2 py-0.5 rounded border font-medium ${cellColor(s.name)}`}>
             {s.name}

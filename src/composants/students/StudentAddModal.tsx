@@ -290,7 +290,7 @@ export default function StudentAddModal({ onClose, onAdd, totalExisting, classes
                       className={`w-full py-2.5 px-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.classId ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
                     >
                       {classes.length === 0
-                        ? <option value="" disabled>{lbl('No classes yet — add a class first', "Aucune classe — ajoutez-en une d'abord")}</option>
+                        ? <option value="" disabled>{lbl('No specialities yet — add a speciality first', "Aucune spécialité — ajoutez-en une d'abord")}</option>
                         : classes.map(c => <option key={c.id} value={c.id}>{c.name} — {c.gradeLevelName}</option>)}
                     </select>
                     {errors.classId && <p className="text-red-500 text-xs mt-1">{errors.classId}</p>}

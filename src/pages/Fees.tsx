@@ -9,15 +9,17 @@ import { mapFeeRecord, mapStudent } from '../api/mappers';
 
 // ── Add-Fee inline modal ──────────────────────────────────────────────────
 interface AddFeeProps {
+  classes: ClassRecord[];
   onClose: () => void;
   onCreated: (rec: FeeRecord) => void;
 }
 
-function AddFeeModal({ onClose, onCreated }: AddFeeProps) {
+function AddFeeModal({ classes, onClose, onCreated }: AddFeeProps) {
   const { lang } = useLanguage();
   const lbl = (en: string, fr: string) => lang === 'fr' ? fr : en;
 
   const [students,    setStudents]   = useState<Student[]>([]);
+  const [classFilter, setClassFilter]= useState('');
   const [studentId,   setStudentId]  = useState('');
   const [feeName,     setFeeName]    = useState('');
   const [amountDue,   setAmountDue]  = useState('');
@@ -32,10 +34,20 @@ function AddFeeModal({ onClose, onCreated }: AddFeeProps) {
       .then(data => {
         const mapped = data.map(mapStudent).filter(s => s.isActive);
         setStudents(mapped);
-        if (mapped.length > 0) setStudentId(mapped[0].id);
       })
       .catch(console.error);
   }, []);
+
+  // Students shown in the picker below, narrowed to the selected speciality (if any).
+  const filteredStudents = classFilter ? students.filter(s => s.classId === classFilter) : students;
+
+  // Keep the selected student valid whenever the list they're drawn from changes
+  // (initial load, or the speciality filter narrowing/widening the options).
+  useEffect(() => {
+    if (filteredStudents.length === 0) { setStudentId(''); return; }
+    if (!filteredStudents.some(s => s.id === studentId)) setStudentId(filteredStudents[0].id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredStudents]);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -92,6 +104,21 @@ function AddFeeModal({ onClose, onCreated }: AddFeeProps) {
           </div>
         ) : (
           <div className="px-5 py-5 space-y-4">
+            {/* Speciality filter */}
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                {lbl('Speciality', 'Spécialité')}
+              </label>
+              <select
+                value={classFilter}
+                onChange={e => setClassFilter(e.target.value)}
+                className="w-full py-2.5 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">{lbl('All specialities', 'Toutes les spécialités')}</option>
+                {classes.map(cls => <option key={cls.id} value={cls.id}>{cls.name}</option>)}
+              </select>
+            </div>
+
             {/* Student */}
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">
@@ -102,11 +129,11 @@ function AddFeeModal({ onClose, onCreated }: AddFeeProps) {
                 onChange={e => setStudentId(e.target.value)}
                 className={`w-full py-2.5 px-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${errors.studentId ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}
               >
-                {students.length === 0
-                  ? <option value="" disabled>{lbl('No students yet', 'Aucun élève')}</option>
-                  : students.map(s => (
+                {filteredStudents.length === 0
+                  ? <option value="" disabled>{lbl('No students in this speciality', 'Aucun élève dans cette spécialité')}</option>
+                  : filteredStudents.map(s => (
                       <option key={s.id} value={s.id}>
-                        {s.firstName} {s.lastName} — {s.className}
+                        {classFilter ? `${s.firstName} ${s.lastName}` : `${s.firstName} ${s.lastName} — ${s.className}`}
                       </option>
                     ))
                 }
@@ -313,7 +340,7 @@ export default function Fees() {
               onChange={e => setClassFilter(e.target.value)}
               className="py-2 px-3 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600"
             >
-              <option value="">{lang === 'fr' ? 'Toutes les classes' : 'All classes'}</option>
+              <option value="">{lang === 'fr' ? 'Toutes les spécialités' : 'All specialities'}</option>
               {classes.map(cls => (
                 <option key={cls.id} value={cls.name}>
                   {cls.name} — {cls.enrolled} {lang === 'fr' ? 'élève(s)' : 'student(s)'}
@@ -478,6 +505,7 @@ export default function Fees() {
       {/* Add fee modal */}
       {addFeeOpen && (
         <AddFeeModal
+          classes={classes}
           onClose={() => setAddFeeOpen(false)}
           onCreated={rec => setRecords(prev => [rec, ...prev])}
         />

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, UserRound, FileText, ClipboardCheck, Calendar, GraduationCap, LogOut,
+  LayoutDashboard, UserRound, FileText, ClipboardCheck, Calendar, GraduationCap, Wallet, LogOut,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -20,6 +20,7 @@ export default function StudentSidebar() {
     { label: t.portal.myMarks,           to: '/student/marks',      icon: FileText        },
     { label: t.portal.myAttendanceRecord,to: '/student/attendance', icon: ClipboardCheck  },
     { label: t.portal.myTimetable,       to: '/student/timetable',  icon: Calendar        },
+    { label: t.portal.myFees,            to: '/student/fees',       icon: Wallet          },
   ];
 
   return (

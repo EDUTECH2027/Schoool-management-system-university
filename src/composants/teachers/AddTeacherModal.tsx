@@ -407,7 +407,7 @@ export default function AddTeacherModal({ onClose, onAdd }: Props) {
                     )}
                     {form.selectedSubjects.length > 0 && (
                       <p className="text-slate-400 text-xs mt-1.5">
-                        {form.selectedSubjects.length} {form.selectedSubjects.length === 1 ? 'subject' : 'subjects'} selected
+                        {form.selectedSubjects.length} {form.selectedSubjects.length === 1 ? 'course' : 'courses'} selected
                       </p>
                     )}
                   </div>

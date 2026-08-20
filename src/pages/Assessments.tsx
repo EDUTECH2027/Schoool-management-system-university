@@ -13,14 +13,7 @@ const gradeColor: Record<string, string> = {
   'D':  'bg-orange-100 text-orange-700',    'F': 'bg-red-100 text-red-700',
 };
 
-// Sequences for each term name
-const TERM_SEQUENCES: Record<string, [number, number]> = {
-  first:  [1, 2],
-  second: [3, 4],
-  third:  [5, 6],
-};
-
-type SeqScores = Record<string, { seq1: string; seq2: string }>;
+type MarkScores = Record<string, { ca: string; exam: string; resit: string }>;
 
 export default function Assessments() {
   const { t, lang } = useLanguage();
@@ -39,7 +32,7 @@ export default function Assessments() {
 
   const [loadingClasses,  setLoadingClasses]  = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
-  const [scores, setScores] = useState<SeqScores>({});
+  const [scores, setScores] = useState<MarkScores>({});
   const [studentsReady, setStudentsReady] = useState(false);
 
   // Load classes + terms + subjects once
@@ -71,8 +64,8 @@ export default function Assessments() {
       .then(data => {
         const mapped = data.map(mapStudent);
         setStudents(mapped);
-        const init: SeqScores = {};
-        mapped.forEach(s => { init[s.id] = { seq1: '', seq2: '' }; });
+        const init: MarkScores = {};
+        mapped.forEach(s => { init[s.id] = { ca: '', exam: '', resit: '' }; });
         setScores(init);
         setSaved(false);
         setFilter('all');
@@ -88,13 +81,14 @@ export default function Assessments() {
     api.getMarks({ classId, subjectId, termId })
       .then(existingMarks => {
         setScores(prev => {
-          const updated: SeqScores = {};
-          Object.keys(prev).forEach(id => { updated[id] = { seq1: '', seq2: '' }; });
+          const updated: MarkScores = {};
+          Object.keys(prev).forEach(id => { updated[id] = { ca: '', exam: '', resit: '' }; });
           existingMarks.forEach(m => {
             if (m.student_id in updated) {
               updated[m.student_id] = {
-                seq1: m.ca_score   != null ? String(m.ca_score)   : '',
-                seq2: m.exam_score != null ? String(m.exam_score) : '',
+                ca: m.ca_score   != null ? String(m.ca_score)   : '',
+                exam: m.exam_score != null ? String(m.exam_score) : '',
+                resit: m.resit_score != null ? String(m.resit_score) : '',
               };
             }
           });
@@ -106,11 +100,11 @@ export default function Assessments() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentsReady, subjectId, termId]);
 
-  const currentTerm = terms.find(tm => tm.id === termId);
-  const [s1, s2] = TERM_SEQUENCES[currentTerm?.name ?? 'first'] ?? [1, 2];
-
-  const updateScore = (sid: string, field: 'seq1' | 'seq2', val: string) => {
-    setScores(prev => ({ ...prev, [sid]: { ...prev[sid], [field]: val } }));
+  // The input's max="100" is only a UI hint — browsers don't stop someone
+  // typing past it — so clamp here too, same as the teacher's Mark Entry page.
+  const updateScore = (sid: string, field: 'ca' | 'exam' | 'resit', val: string) => {
+    const clamped = val === '' ? '' : String(Math.min(100, Math.max(0, Number(val) || 0)));
+    setScores(prev => ({ ...prev, [sid]: { ...prev[sid], [field]: clamped } }));
     setSaved(false);
   };
 
@@ -123,13 +117,20 @@ export default function Assessments() {
     return              { grade: 'F',  remark: lang === 'fr' ? 'Échec'       : 'Fail'        };
   };
 
+  // CA is worth 40% of the total, the exam 60% — same weighting the backend
+  // applies when saving (see marks.js), kept in sync here purely for the
+  // live preview before a save.
   const rows = students.map(s => {
-    const seq1  = parseFloat(scores[s.id]?.seq1 ?? '') || 0;
-    const seq2  = parseFloat(scores[s.id]?.seq2 ?? '') || 0;
-    const hasAny = (scores[s.id]?.seq1 ?? '') !== '' || (scores[s.id]?.seq2 ?? '') !== '';
-    const total  = hasAny ? Math.round((seq1 + seq2) / 2) : 0;
+    const ca  = parseFloat(scores[s.id]?.ca ?? '') || 0;
+    const exam  = parseFloat(scores[s.id]?.exam ?? '') || 0;
+    const hasAny = (scores[s.id]?.ca ?? '') !== '' || (scores[s.id]?.exam ?? '') !== '';
+    const total  = hasAny ? Math.round(ca * 0.4 + exam * 0.6) : 0;
     const { grade, remark } = getGrade(total);
-    return { ...s, seq1, seq2, total, grade, remark, hasAny };
+    const resitInput = scores[s.id]?.resit ?? '';
+    const hasResit = resitInput !== '';
+    const resit = hasResit ? parseFloat(resitInput) || 0 : null;
+    const resitGrade = hasResit ? getGrade(resit as number).grade : null;
+    return { ...s, ca, exam, total, grade, remark, hasAny, resit, resitGrade };
   });
 
   const visibleRows = filter === 'passed'
@@ -147,29 +148,27 @@ export default function Assessments() {
 
   const termLabel = (tm: Term) => {
     const n = tm.name === 'first' ? 1 : tm.name === 'second' ? 2 : 3;
-    const [a, b] = TERM_SEQUENCES[tm.name] ?? [1, 2];
-    return lang === 'fr'
-      ? `Trimestre ${n} (Séq ${a}-${b})`
-      : `Term ${n} (Seq ${a}-${b})`;
+    return lang === 'fr' ? `Semestre ${n}` : `Semester ${n}`;
   };
 
-  const seq1Header = lang === 'fr' ? `Séq ${s1} /100` : `Seq ${s1} /100`;
-  const seq2Header = lang === 'fr' ? `Séq ${s2} /100` : `Seq ${s2} /100`;
+  const caHeader = lang === 'fr' ? 'CC (40%)' : 'CA (40%)';
+  const examHeader = lang === 'fr' ? 'Examen (60%)' : 'Exams (60%)';
   const formulaHint = lang === 'fr'
-    ? `Moy. Séq ${s1} & Séq ${s2} = Total /100`
-    : `Avg of Seq ${s1} & Seq ${s2} = Total /100`;
+    ? 'CC×40% + Examen×60% = Total /100'
+    : 'CA×40% + Exam×60% = Total /100';
 
   const handleSave = async () => {
     if (!classId || !subjectId) return;
     setSaving(true);
     const subject = subjects.find(s => s.id === subjectId);
     const records = students
-      .filter(s => (scores[s.id]?.seq1 ?? '') !== '' || (scores[s.id]?.seq2 ?? '') !== '')
+      .filter(s => (scores[s.id]?.ca ?? '') !== '' || (scores[s.id]?.exam ?? '') !== '' || (scores[s.id]?.resit ?? '') !== '')
       .map(s => {
-        const seq1 = parseFloat(scores[s.id]?.seq1 ?? '') || 0;
-        const seq2 = parseFloat(scores[s.id]?.seq2 ?? '') || 0;
-        const total = Math.round((seq1 + seq2) / 2);
+        const ca = parseFloat(scores[s.id]?.ca ?? '') || 0;
+        const exam = parseFloat(scores[s.id]?.exam ?? '') || 0;
+        const total = Math.round(ca * 0.4 + exam * 0.6);
         const { grade, remark } = getGrade(total);
+        const resitInput = scores[s.id]?.resit ?? '';
         return {
           studentId:     s.id,
           studentName:   `${s.firstName} ${s.lastName}`,
@@ -178,11 +177,12 @@ export default function Assessments() {
           subjectId,
           subjectName:   subject?.name ?? '',
           termId:        termId || undefined,
-          caScore:       seq1,
-          examScore:     seq2,
+          caScore:       ca,
+          examScore:     exam,
           totalScore:    total,
           grade,
           remark,
+          resitScore:    resitInput !== '' ? parseFloat(resitInput) || 0 : null,
         };
       });
     try {
@@ -209,8 +209,8 @@ export default function Assessments() {
         <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
           <BookOpen size={28} className="text-slate-400" />
         </div>
-        <h3 className="text-slate-700 font-semibold text-lg mb-1">No classes yet</h3>
-        <p className="text-slate-400 text-sm max-w-xs">Add classes first before entering assessments.</p>
+        <h3 className="text-slate-700 font-semibold text-lg mb-1">No specialities yet</h3>
+        <p className="text-slate-400 text-sm max-w-xs">Add specialities first before entering assessments.</p>
       </div>
     );
   }
@@ -222,12 +222,12 @@ export default function Assessments() {
           <BookOpen size={28} className="text-amber-400" />
         </div>
         <h3 className="text-slate-700 font-semibold text-lg mb-1">
-          {lang === 'fr' ? 'Aucun trimestre configuré' : 'No academic term configured'}
+          {lang === 'fr' ? 'Aucun semestre configuré' : 'No academic semester configured'}
         </h3>
         <p className="text-slate-400 text-sm max-w-xs">
           {lang === 'fr'
-            ? 'Ajoutez une année académique et au moins un trimestre dans les Paramètres avant de saisir des notes.'
-            : 'Add an academic year and at least one term in Settings before entering marks.'}
+            ? 'Ajoutez une année académique et au moins un semestre dans les Paramètres avant de saisir des notes.'
+            : 'Add an academic year and at least one semester in Settings before entering marks.'}
         </p>
       </div>
     );
@@ -240,12 +240,12 @@ export default function Assessments() {
           <BookOpen size={28} className="text-amber-400" />
         </div>
         <h3 className="text-slate-700 font-semibold text-lg mb-1">
-          {lang === 'fr' ? 'Aucune matière configurée' : 'No subjects configured'}
+          {lang === 'fr' ? 'Aucun cours configuré' : 'No courses configured'}
         </h3>
         <p className="text-slate-400 text-sm max-w-xs">
           {lang === 'fr'
-            ? 'Ajoutez des matières dans les Paramètres avant de saisir des notes.'
-            : 'Add subjects in Settings before entering marks.'}
+            ? 'Ajoutez des cours dans les Paramètres avant de saisir des notes.'
+            : 'Add courses in Settings before entering marks.'}
         </p>
       </div>
     );
@@ -366,7 +366,7 @@ export default function Assessments() {
           </div>
         ) : students.length === 0 ? (
           <div className="py-12 text-center text-slate-400 text-sm">
-            No students enrolled in this class yet.
+            No students enrolled in this speciality yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -375,11 +375,12 @@ export default function Assessments() {
                 <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                   <th className="text-left px-5 py-3 font-medium w-8">#</th>
                   <th className="text-left px-5 py-3 font-medium">{t.common.name}</th>
-                  <th className="text-center px-5 py-3 font-medium">{seq1Header}</th>
-                  <th className="text-center px-5 py-3 font-medium">{seq2Header}</th>
+                  <th className="text-center px-5 py-3 font-medium">{caHeader}</th>
+                  <th className="text-center px-5 py-3 font-medium">{examHeader}</th>
                   <th className="text-center px-5 py-3 font-medium">{t.assessments.totalOutOf}</th>
                   <th className="text-center px-5 py-3 font-medium">{t.assessments.grade}</th>
                   <th className="text-center px-5 py-3 font-medium">{t.assessments.remark}</th>
+                  <th className="text-center px-5 py-3 font-medium">{lang === 'fr' ? 'Rattrapage /100' : 'Resit /100'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -400,8 +401,8 @@ export default function Assessments() {
                     <td className="px-5 py-3 text-center">
                       <input
                         type="number" min="0" max="100"
-                        value={scores[s.id]?.seq1 ?? ''}
-                        onChange={e => updateScore(s.id, 'seq1', e.target.value)}
+                        value={scores[s.id]?.ca ?? ''}
+                        onChange={e => updateScore(s.id, 'ca', e.target.value)}
                         className="w-16 text-center py-1 px-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         placeholder="—"
                       />
@@ -409,8 +410,8 @@ export default function Assessments() {
                     <td className="px-5 py-3 text-center">
                       <input
                         type="number" min="0" max="100"
-                        value={scores[s.id]?.seq2 ?? ''}
-                        onChange={e => updateScore(s.id, 'seq2', e.target.value)}
+                        value={scores[s.id]?.exam ?? ''}
+                        onChange={e => updateScore(s.id, 'exam', e.target.value)}
                         className="w-16 text-center py-1 px-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         placeholder="—"
                       />
@@ -427,6 +428,22 @@ export default function Assessments() {
                     </td>
                     <td className="px-5 py-3 text-center text-slate-500 text-xs">
                       {s.hasAny ? s.remark : '—'}
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <input
+                          type="number" min="0" max="100"
+                          value={scores[s.id]?.resit ?? ''}
+                          onChange={e => updateScore(s.id, 'resit', e.target.value)}
+                          className="w-16 text-center py-1 px-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                          placeholder="—"
+                        />
+                        {s.resitGrade && (
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${gradeColor[s.resitGrade] ?? 'bg-slate-100 text-slate-600'}`}>
+                            {s.resitGrade}
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import {
-  Eye, EyeOff, GraduationCap, Lock, Mail, AlertCircle, IdCard,
-  ChevronRight, Users, BookOpen, TrendingUp, Shield, Building2, School,
+  Eye, EyeOff, GraduationCap, Lock, Mail, AlertCircle,
+  ChevronRight, Users, BookOpen, TrendingUp, Shield,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../context/BrandingContext';
@@ -13,31 +13,18 @@ const FEATURES = [
   { icon: TrendingUp, en: 'Real-time attendance & financial reports',   fr: 'Présences & rapports financiers en direct' },
 ];
 
-type LoginMode = 'admin' | 'student';
-
 export default function Login() {
-  const { login, loginStudent }                         = useAuth();
+  const { login }                                       = useAuth();
   const { logoUrl, schoolName, schoolSub, schoolInfo }   = useBranding();
   const { lang }                                         = useLanguage();
   const lbl = (en: string, fr: string) => lang === 'fr' ? fr : en;
 
-  const [mode, setMode] = useState<LoginMode>('admin');
-
-  // Administration & staff (existing flow, unchanged)
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-
-  // Student (matricule only, no password — see AuthContext.loginStudent)
-  const [studentId, setStudentId] = useState('');
 
   const [showPw, setShowPw]     = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
-
-  const switchMode = (next: LoginMode) => {
-    setMode(next);
-    setError('');
-  };
 
   const handleAdminSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,19 +36,6 @@ export default function Login() {
     setLoading(true);
     const ok = await login(email, password);
     if (!ok) setError(lbl('Invalid email or password.', 'Email ou mot de passe incorrect.'));
-    setLoading(false);
-  };
-
-  const handleStudentSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    if (!studentId.trim()) {
-      setError(lbl('Please enter your Student ID.', 'Veuillez saisir votre matricule.'));
-      return;
-    }
-    setLoading(true);
-    const ok = await loginStudent(studentId);
-    if (!ok) setError(lbl('Invalid Student ID.', 'Matricule incorrect.'));
     setLoading(false);
   };
 
@@ -204,163 +178,89 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Role toggle */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-6">
-              {([
-                { key: 'admin' as const,   label: lbl('Administration', 'Administration'), icon: Building2 },
-                { key: 'student' as const, label: lbl('Student', 'Élève'),                   icon: School },
-              ]).map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => switchMode(key)}
-                  className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    mode === key ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                >
-                  <Icon size={14} /> {label}
-                </button>
-              ))}
-            </div>
+            {/* ── Login form ───────────────────────────────────────── */}
+            <form onSubmit={handleAdminSubmit} className="space-y-5" noValidate>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                  {lbl('Email address', 'Adresse email')}
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Mail size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => { setEmail(e.target.value); setError(''); }}
+                    placeholder="admin@edutech.com"
+                    autoComplete="email"
+                    autoFocus
+                    className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
+                  />
+                </div>
+              </div>
 
-            {/* ── Administration & staff form ─────────────────────── */}
-            {mode === 'admin' && (
-              <form onSubmit={handleAdminSubmit} className="space-y-5" noValidate>
-                <div className="space-y-1.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    {lbl('Email address', 'Adresse email')}
+                    {lbl('Password', 'Mot de passe')}
                   </label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Mail size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={e => { setEmail(e.target.value); setError(''); }}
-                      placeholder="admin@edutech.com"
-                      autoComplete="email"
-                      className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
-                    />
-                  </div>
+                  <button type="button" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
+                    {lbl('Forgot password?', 'Mot de passe oublié ?')}
+                  </button>
                 </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                      {lbl('Password', 'Mot de passe')}
-                    </label>
-                    <button type="button" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
-                      {lbl('Forgot password?', 'Mot de passe oublié ?')}
-                    </button>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Lock size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
                   </div>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Lock size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
-                    </div>
-                    <input
-                      type={showPw ? 'text' : 'password'}
-                      value={password}
-                      onChange={e => { setPassword(e.target.value); setError(''); }}
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPw(v => !v)}
-                      tabIndex={-1}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
+                  <input
+                    type={showPw ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => { setPassword(e.target.value); setError(''); }}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(v => !v)}
+                    tabIndex={-1}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
                 </div>
+              </div>
 
-                {error && (
-                  <div className="flex items-center gap-2.5 px-3.5 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <AlertCircle size={15} className="shrink-0" />
-                    <span>{error}</span>
-                  </div>
+              {error && (
+                <div className="flex items-center gap-2.5 px-3.5 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  <AlertCircle size={15} className="shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 hover:-translate-y-0.5 active:translate-y-0"
+                style={{
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)',
+                  boxShadow: '0 4px 20px rgba(99,102,241,0.45)',
+                }}
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-[2.5px] border-white/30 border-t-white rounded-full animate-spin" />
+                    {lbl('Signing in…', 'Connexion…')}
+                  </>
+                ) : (
+                  <>
+                    {lbl('Sign in', 'Se connecter')}
+                    <ChevronRight size={16} />
+                  </>
                 )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 hover:-translate-y-0.5 active:translate-y-0"
-                  style={{
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)',
-                    boxShadow: '0 4px 20px rgba(99,102,241,0.45)',
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-[2.5px] border-white/30 border-t-white rounded-full animate-spin" />
-                      {lbl('Signing in…', 'Connexion…')}
-                    </>
-                  ) : (
-                    <>
-                      {lbl('Sign in', 'Se connecter')}
-                      <ChevronRight size={16} />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* ── Student form ────────────────────────────────────── */}
-            {mode === 'student' && (
-              <form onSubmit={handleStudentSubmit} className="space-y-5" noValidate>
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    {lbl('Student ID', 'Matricule')}
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <IdCard size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
-                    </div>
-                    <input
-                      type="text"
-                      value={studentId}
-                      onChange={e => { setStudentId(e.target.value); setError(''); }}
-                      placeholder={lbl('e.g. BSPS-2026-001', 'ex. BSPS-2026-001')}
-                      autoComplete="username"
-                      autoFocus
-                      className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="flex items-center gap-2.5 px-3.5 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <AlertCircle size={15} className="shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60 hover:-translate-y-0.5 active:translate-y-0"
-                  style={{
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)',
-                    boxShadow: '0 4px 20px rgba(99,102,241,0.45)',
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-[2.5px] border-white/30 border-t-white rounded-full animate-spin" />
-                      {lbl('Signing in…', 'Connexion…')}
-                    </>
-                  ) : (
-                    <>
-                      {lbl('Sign in', 'Se connecter')}
-                      <ChevronRight size={16} />
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
+              </button>
+            </form>
 
             {/* Footer */}
             <p className="text-center text-[11px] text-slate-400 mt-8">

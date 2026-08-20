@@ -134,7 +134,7 @@ export default function ParentDashboard() {
   const statTiles = [
     {
       key: 'average', label: 'Cumulative GPA',
-      sub: latestTerm ? `Term GPA: ${latestTerm.termGpa.toFixed(2)}` : 'No transcript data yet',
+      sub: latestTerm ? `Semester GPA: ${latestTerm.termGpa.toFixed(2)}` : 'No transcript data yet',
       value: cumulativeGpa, suffix: '', bar: 'bg-indigo-500', to: `/parent/children/${selectedId}/marks`,
     },
     { key: 'attendance', label: 'Attendance', sub: 'This month', value: attPct, suffix: '%', bar: 'bg-sky-500', to: `/parent/children/${selectedId}/attendance` },
@@ -209,7 +209,7 @@ export default function ParentDashboard() {
               </div>
 
               {timetable.length === 0 ? (
-                <p className="text-sm text-slate-400 py-10 text-center">No timetable available for this class yet.</p>
+                <p className="text-sm text-slate-400 py-10 text-center">No timetable available for this speciality yet.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <div className="grid min-w-[640px]" style={{ gridTemplateColumns: '52px repeat(5, 1fr)' }}>
@@ -292,7 +292,7 @@ export default function ParentDashboard() {
                 ) : (
                   <div>
                     <div className="grid grid-cols-[1fr_auto_auto] gap-3 text-[10px] font-semibold uppercase tracking-wide text-slate-400 pb-2 border-b border-slate-100 dark:border-slate-700">
-                      <span>Subject</span>
+                      <span>Course</span>
                       <span className="w-14 text-right">Score</span>
                       <span className="w-8" />
                     </div>

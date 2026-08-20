@@ -80,12 +80,12 @@ export default function SchoolDetail() {
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{summary?.teachers ?? 0}</p>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-          <p className="text-slate-400 text-xs">Classes</p>
+          <p className="text-slate-400 text-xs">Specialities</p>
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{summary?.classes ?? 0}</p>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
           <p className="text-slate-400 text-xs">Fees Collected</p>
-          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{(summary?.fees.collected ?? 0).toLocaleString()}</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{(summary?.fees.collected ?? 0).toLocaleString()} FCFA</p>
         </div>
       </div>
 
@@ -97,12 +97,16 @@ export default function SchoolDetail() {
               <label className="text-xs font-medium text-slate-500">Current Plan</label>
               <select disabled={saving} value={school.plan_id} onChange={e => changePlan(e.target.value)}
                 className="w-full mt-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                {plans.map(p => <option key={p.id} value={p.id}>{p.name} (${p.price}/mo)</option>)}
+                {plans.map(p => <option key={p.id} value={p.id}>{p.name} ({p.price.toLocaleString()} FCFA/mo)</option>)}
               </select>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Admin</span>
               <span className="text-slate-800 dark:text-slate-100">{school.admin_name} ({school.admin_email})</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Admin WhatsApp</span>
+              <span className="text-slate-800 dark:text-slate-100">{school.admin_whatsapp || '—'}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Subscription Started</span>

@@ -58,7 +58,7 @@ function groupByTerm(entries: TxEntry[], terms: TermRaw[]): TermGroup[] {
 
 function termLabel(name: string, lang: 'en' | 'fr') {
   const n = name === 'first' ? 1 : name === 'second' ? 2 : 3;
-  return lang === 'fr' ? `Trimestre ${n}` : `Term ${n}`;
+  return lang === 'fr' ? `Semestre ${n}` : `Semester ${n}`;
 }
 
 // ── Printable transcript ────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ function PrintCard({ tx, terms }: { tx: TxRecord; terms: TermRaw[] }) {
           {([
             [lang === 'fr' ? 'Nom complet' : 'Full Name',    tx.student_name],
             [lang === 'fr' ? 'Matricule'   : 'Adm. No.',     tx.student_number],
-            [lang === 'fr' ? 'Classe'      : 'Class',        tx.class_name],
+            [lang === 'fr' ? 'Spécialité'  : 'Speciality',    tx.class_name],
           ] as [string, string][]).map(([label, val]) => (
             <div key={label} className="flex gap-2">
               <span className="text-slate-500 w-36 shrink-0">{label} :</span>
@@ -103,7 +103,7 @@ function PrintCard({ tx, terms }: { tx: TxRecord; terms: TermRaw[] }) {
         <div className="space-y-1.5">
           {([
             [lang === 'fr' ? 'Date de génération' : 'Generated', tx.generated_at ? new Date(tx.generated_at).toLocaleDateString() : '—'],
-            [lang === 'fr' ? 'Semestres inclus'   : 'Terms Included', String(tx.terms_included)],
+            [lang === 'fr' ? 'Semestres inclus'   : 'Semesters Included', String(tx.terms_included)],
           ] as [string, string][]).map(([label, val]) => (
             <div key={label} className="flex gap-2">
               <span className="text-slate-500 w-36 shrink-0">{label} :</span>
@@ -145,7 +145,7 @@ function PrintCard({ tx, terms }: { tx: TxRecord; terms: TermRaw[] }) {
             <tfoot>
               <tr className="bg-indigo-50" style={{ borderTop: '2px solid #4f46e5' }}>
                 <td className="px-3 py-2 font-bold text-slate-800" colSpan={4}>
-                  {lang === 'fr' ? 'Moyenne du semestre' : 'Term GPA'}
+                  {lang === 'fr' ? 'Moyenne du semestre' : 'Semester GPA'}
                 </td>
                 <td className="px-3 py-2 text-center font-bold text-indigo-700">{g.termCreditHours}</td>
                 <td className="px-3 py-2 text-center font-bold text-indigo-700" colSpan={2}>{g.termGpa.toFixed(2)} / 4.0</td>
@@ -166,7 +166,7 @@ function PrintCard({ tx, terms }: { tx: TxRecord; terms: TermRaw[] }) {
           <p className="text-2xl font-bold text-slate-800">{tx.total_credit_hours}</p>
         </div>
         <div className="border border-slate-300 rounded p-3 text-center">
-          <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">{lang === 'fr' ? 'Semestres' : 'Terms Included'}</p>
+          <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">{lang === 'fr' ? 'Semestres' : 'Semesters Included'}</p>
           <p className="text-2xl font-bold text-slate-800">{tx.terms_included}</p>
         </div>
       </div>
@@ -311,11 +311,11 @@ export default function Transcripts() {
       const leftRows: [string, string][] = [
         [lang === 'fr' ? 'Nom complet' : 'Full Name',  tx.student_name   ],
         [lang === 'fr' ? 'Matricule'   : 'Adm. No.',   tx.student_number ],
-        [lang === 'fr' ? 'Classe'      : 'Class',       tx.class_name     ],
+        [lang === 'fr' ? 'Spécialité'  : 'Speciality',  tx.class_name     ],
       ];
       const rightRows: [string, string][] = [
         [lang === 'fr' ? 'Date de génération' : 'Generated', tx.generated_at ? new Date(tx.generated_at).toLocaleDateString() : '—'],
-        [lang === 'fr' ? 'Semestres inclus'   : 'Terms Included', String(tx.terms_included)],
+        [lang === 'fr' ? 'Semestres inclus'   : 'Semesters Included', String(tx.terms_included)],
       ];
       leftRows.forEach(([label, val], i) => {
         doc.setFont('helvetica', 'bold'); doc.setTextColor(100, 116, 139);
@@ -357,7 +357,7 @@ export default function Transcripts() {
             e.total_score ?? 0, e.credit_hours ?? 0, e.grade || '', e.grade_points.toFixed(1),
           ]),
           foot: [[
-            { content: lang === 'fr' ? 'Moyenne du semestre' : 'Term GPA', colSpan: 4,
+            { content: lang === 'fr' ? 'Moyenne du semestre' : 'Semester GPA', colSpan: 4,
               styles: { fontStyle: 'bold', fillColor: [238, 242, 255], textColor: [79, 70, 229] } },
             { content: `${g.termCreditHours}`,
               styles: { fontStyle: 'bold', halign: 'center', fillColor: [238, 242, 255], textColor: [79, 70, 229] } },
@@ -402,7 +402,7 @@ export default function Transcripts() {
         `${tx.cumulative_gpa.toFixed(2)}/4.0`, [79, 70, 229]);
       drawBox(X + BW + 4,     lang === 'fr' ? 'TOTAL CRÉDITS' : 'TOTAL CREDIT HOURS',
         `${tx.total_credit_hours}`);
-      drawBox(X + (BW + 4)*2, lang === 'fr' ? 'SEMESTRES' : 'TERMS INCLUDED',
+      drawBox(X + (BW + 4)*2, lang === 'fr' ? 'SEMESTRES' : 'SEMESTERS INCLUDED',
         `${tx.terms_included}`);
 
       y += BH + 10;
@@ -561,7 +561,7 @@ export default function Transcripts() {
               <BookOpen size={28} className="text-slate-300" />
             </div>
             <h3 className="text-slate-600 font-semibold mb-1">
-              {lang === 'fr' ? 'Aucun élève dans cette classe' : 'No students in this class'}
+              {lang === 'fr' ? 'Aucun élève dans cette spécialité' : 'No students in this speciality'}
             </h3>
           </div>
         ) : (
@@ -602,7 +602,7 @@ export default function Transcripts() {
                         <h3 className="font-semibold text-slate-800">{tx.student_name}</h3>
                         <p className="text-slate-400 text-xs">{tx.student_number} · {tx.class_name}</p>
                         <p className="text-slate-400 text-xs">
-                          {tx.terms_included} {lang === 'fr' ? 'semestre(s) inclus' : 'term(s) included'}
+                          {tx.terms_included} {lang === 'fr' ? 'semestre(s) inclus' : 'semester(s) included'}
                         </p>
                       </div>
                     </div>
