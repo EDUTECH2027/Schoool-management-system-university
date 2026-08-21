@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, CalendarDays, AlertTriangle, CheckCircle2, BookOpen, Trash2, Plus, Pencil, Check, Download, Database, FileUp, DollarSign, Lock, Unlock } from 'lucide-react';
+import { Upload, X, CalendarDays, AlertTriangle, CheckCircle2, BookOpen, Trash2, Plus, Pencil, Check, Download, Database, FileUp, DollarSign, Lock, Unlock, KeyRound } from 'lucide-react';
 import type { Subject } from '../types';
-import { api, type ClassRecord, type Teacher as TeacherRaw, type AcademicYear, type Term, type MarksSession } from '../api/client';
+import { api, type ClassRecord, type Teacher as TeacherRaw, type AcademicYear, type Term, type MarksSession, type PasswordResetRequest } from '../api/client';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useBranding } from '../context/BrandingContext';
 
@@ -203,6 +203,30 @@ export default function Settings() {
     } catch (err) { console.error(err); }
   };
 
+  // Password reset requests state
+  const [resetRequests, setResetRequests] = useState<PasswordResetRequest[]>([]);
+  const [resetActingId, setResetActingId] = useState<string | null>(null);
+
+  const loadResetRequests = () => api.getPasswordResetRequests().then(setResetRequests).catch(console.error);
+
+  const approveReset = async (id: string) => {
+    setResetActingId(id);
+    try {
+      await api.approvePasswordReset(id);
+      await loadResetRequests();
+    } catch (err) { console.error(err); }
+    setResetActingId(null);
+  };
+
+  const dismissReset = async (id: string) => {
+    setResetActingId(id);
+    try {
+      await api.dismissPasswordReset(id);
+      await loadResetRequests();
+    } catch (err) { console.error(err); }
+    setResetActingId(null);
+  };
+
   useEffect(() => {
     Promise.all([
       api.getClasses(),
@@ -237,6 +261,9 @@ export default function Settings() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadMarksSessionState(); }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadResetRequests(); }, []);
 
   const setCurrentYear = async (id: string) => {
     const found = academicYears.find(y => y.id === id);
@@ -1586,6 +1613,63 @@ export default function Settings() {
                 );
               })}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Password Reset Requests ──────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-semibold text-slate-800 flex items-center gap-2">
+            <KeyRound size={18} className="text-indigo-500" />
+            {lbl('Password Reset Requests', 'Demandes de réinitialisation')}
+          </h3>
+          {resetRequests.filter(r => r.status === 'pending').length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">
+              {resetRequests.filter(r => r.status === 'pending').length} {lbl('pending', 'en attente')}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-slate-400">
+          {lbl(
+            'When someone clicks "Forgot password?" on the login screen, their request shows up here. Approving lets them set a brand new password themselves — no old password needed.',
+            'Quand quelqu\'un clique sur « Mot de passe oublié ? » sur l\'écran de connexion, sa demande apparaît ici. L\'approbation lui permet de définir un nouveau mot de passe sans avoir besoin de l\'ancien.'
+          )}
+        </p>
+
+        {resetRequests.length === 0 ? (
+          <p className="text-sm text-slate-400">{lbl('No requests yet.', 'Aucune demande pour le moment.')}</p>
+        ) : (
+          <div className="space-y-1.5 max-h-64 overflow-y-auto">
+            {resetRequests.map(r => (
+              <div key={r.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-sm gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-700 truncate">{r.email}</p>
+                  <p className="text-xs text-slate-400">
+                    {new Date(r.requested_at).toLocaleString()}
+                    {r.status !== 'pending' && (
+                      <span className={`ml-2 font-medium ${
+                        r.status === 'approved' ? 'text-indigo-600' : r.status === 'resolved' ? 'text-emerald-600' : 'text-slate-400'
+                      }`}>
+                        · {r.status === 'approved' ? lbl('approved', 'approuvée') : r.status === 'resolved' ? lbl('password set', 'mot de passe défini') : lbl('dismissed', 'ignorée')}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                {r.status === 'pending' && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => dismissReset(r.id)} disabled={resetActingId === r.id}
+                      className="text-xs text-slate-500 hover:text-slate-700 disabled:opacity-50 px-2 py-1">
+                      {lbl('Dismiss', 'Ignorer')}
+                    </button>
+                    <button onClick={() => approveReset(r.id)} disabled={resetActingId === r.id}
+                      className="flex items-center gap-1 text-xs bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+                      <Check size={13} /> {lbl('Approve', 'Approuver')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

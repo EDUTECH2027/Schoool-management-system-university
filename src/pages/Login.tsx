@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import {
   Eye, EyeOff, GraduationCap, Lock, Mail, AlertCircle,
-  ChevronRight, Users, BookOpen, TrendingUp, Shield,
+  ChevronRight, Users, BookOpen, TrendingUp, Shield, KeyRound, CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../context/BrandingContext';
 import { useLanguage } from '../i18n/LanguageContext';
+import { api } from '../api/client';
 
 const FEATURES = [
   { icon: Users,      en: 'Manage students, teachers & staff',          fr: 'Gérer élèves, enseignants & personnel' },
@@ -14,7 +15,7 @@ const FEATURES = [
 ];
 
 export default function Login() {
-  const { login }                                       = useAuth();
+  const { login, resetPassword }                        = useAuth();
   const { logoUrl, schoolName, schoolSub, schoolInfo }   = useBranding();
   const { lang }                                         = useLanguage();
   const lbl = (en: string, fr: string) => lang === 'fr' ? fr : en;
@@ -26,6 +27,14 @@ export default function Login() {
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
 
+  // Forgot-password: request an admin-approved reset, then — once approved —
+  // this same email lets the user set a new password with no old one needed.
+  const [resetMode, setResetMode]     = useState(false);
+  const [forgotSent, setForgotSent]   = useState(false);
+  const [forgotSending, setForgotSending] = useState(false);
+  const [newPassword, setNewPassword]         = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   const handleAdminSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -36,6 +45,48 @@ export default function Login() {
     setLoading(true);
     const ok = await login(email, password);
     if (!ok) setError(lbl('Invalid email or password.', 'Email ou mot de passe incorrect.'));
+    setLoading(false);
+  };
+
+  const handleEmailBlur = async () => {
+    if (!email.trim() || resetMode) return;
+    try {
+      const { canReset } = await api.checkResetStatus(email.trim());
+      if (canReset) { setResetMode(true); setError(''); setForgotSent(false); }
+    } catch { /* ignore — normal login still works */ }
+  };
+
+  const handleForgotClick = async () => {
+    setError('');
+    if (!email.trim()) {
+      setError(lbl('Enter your email address first.', 'Entrez d\'abord votre adresse email.'));
+      return;
+    }
+    setForgotSending(true);
+    try {
+      await api.forgotPassword(email.trim());
+      setForgotSent(true);
+    } catch {
+      setError(lbl('Something went wrong. Please try again.', 'Une erreur est survenue. Veuillez réessayer.'));
+    } finally {
+      setForgotSending(false);
+    }
+  };
+
+  const handleResetSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (newPassword.length < 6) {
+      setError(lbl('New password must be at least 6 characters.', 'Le nouveau mot de passe doit contenir au moins 6 caractères.'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError(lbl('Passwords do not match.', 'Les mots de passe ne correspondent pas.'));
+      return;
+    }
+    setLoading(true);
+    const ok = await resetPassword(email.trim(), newPassword);
+    if (!ok) setError(lbl('Could not set your new password. Ask your admin to approve the reset first.', 'Impossible de définir le nouveau mot de passe. Demandez à votre admin d\'approuver la demande.'));
     setLoading(false);
   };
 
@@ -179,7 +230,7 @@ export default function Login() {
             </div>
 
             {/* ── Login form ───────────────────────────────────────── */}
-            <form onSubmit={handleAdminSubmit} className="space-y-5" noValidate>
+            <form onSubmit={resetMode ? handleResetSubmit : handleAdminSubmit} className="space-y-5" noValidate>
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
                   {lbl('Email address', 'Adresse email')}
@@ -191,7 +242,8 @@ export default function Login() {
                   <input
                     type="email"
                     value={email}
-                    onChange={e => { setEmail(e.target.value); setError(''); }}
+                    onChange={e => { setEmail(e.target.value); setError(''); if (resetMode) { setResetMode(false); setForgotSent(false); } }}
+                    onBlur={handleEmailBlur}
                     placeholder="admin@edutech.com"
                     autoComplete="email"
                     autoFocus
@@ -200,37 +252,94 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    {lbl('Password', 'Mot de passe')}
-                  </label>
-                  <button type="button" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition-colors">
-                    {lbl('Forgot password?', 'Mot de passe oublié ?')}
-                  </button>
-                </div>
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
+              {resetMode ? (
+                <>
+                  <div className="flex items-center gap-2.5 px-3.5 py-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 text-sm">
+                    <KeyRound size={15} className="shrink-0" />
+                    <span>{lbl('Your reset request was approved. Set a new password to continue.', 'Votre demande a été approuvée. Définissez un nouveau mot de passe pour continuer.')}</span>
                   </div>
-                  <input
-                    type={showPw ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => { setPassword(e.target.value); setError(''); }}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(v => !v)}
-                    tabIndex={-1}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                      {lbl('New password', 'Nouveau mot de passe')}
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Lock size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
+                      </div>
+                      <input
+                        type={showPw ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={e => { setNewPassword(e.target.value); setError(''); }}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        minLength={6}
+                        className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw(v => !v)}
+                        tabIndex={-1}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                      {lbl('Confirm new password', 'Confirmer le mot de passe')}
+                    </label>
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => { setConfirmPassword(e.target.value); setError(''); }}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                      minLength={6}
+                      className="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                      {lbl('Password', 'Mot de passe')}
+                    </label>
+                    <button type="button" onClick={handleForgotClick} disabled={forgotSending}
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition-colors disabled:opacity-60">
+                      {forgotSending ? lbl('Sending…', 'Envoi…') : lbl('Forgot password?', 'Mot de passe oublié ?')}
+                    </button>
+                  </div>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Lock size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
+                    </div>
+                    <input
+                      type={showPw ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => { setPassword(e.target.value); setError(''); }}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      className="w-full pl-10 pr-11 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw(v => !v)}
+                      tabIndex={-1}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                  {forgotSent && (
+                    <div className="flex items-center gap-2.5 px-3.5 py-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm">
+                      <CheckCircle2 size={15} className="shrink-0" />
+                      <span>{lbl('Request sent. Once your admin approves it, come back here and re-enter your email.', 'Demande envoyée. Une fois approuvée par votre admin, revenez ici et ressaisissez votre email.')}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
               {error && (
                 <div className="flex items-center gap-2.5 px-3.5 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
@@ -251,11 +360,11 @@ export default function Login() {
                 {loading ? (
                   <>
                     <span className="w-4 h-4 border-[2.5px] border-white/30 border-t-white rounded-full animate-spin" />
-                    {lbl('Signing in…', 'Connexion…')}
+                    {resetMode ? lbl('Saving…', 'Enregistrement…') : lbl('Signing in…', 'Connexion…')}
                   </>
                 ) : (
                   <>
-                    {lbl('Sign in', 'Se connecter')}
+                    {resetMode ? lbl('Set password & sign in', 'Définir & se connecter') : lbl('Sign in', 'Se connecter')}
                     <ChevronRight size={16} />
                   </>
                 )}

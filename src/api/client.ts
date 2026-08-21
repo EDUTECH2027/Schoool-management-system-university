@@ -79,6 +79,17 @@ export const api = {
   logout: () => request<void>('POST', '/auth/logout'),
   changePassword: (currentPassword: string, newPassword: string) =>
     request<{ message: string }>('PUT', '/auth/me/password', { currentPassword, newPassword }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('POST', '/auth/forgot-password', { email }),
+  checkResetStatus: (email: string) =>
+    request<{ canReset: boolean }>('GET', `/auth/reset-status?email=${encodeURIComponent(email)}`),
+  resetPassword: (email: string, newPassword: string) =>
+    request<{ token: string; user: AuthUser }>('POST', '/auth/reset-password', { email, newPassword }),
+
+  // ── Password reset requests (admin) ─────────────────────────────────
+  getPasswordResetRequests: () => request<PasswordResetRequest[]>('GET', '/password-resets'),
+  approvePasswordReset: (id: string) => request<PasswordResetRequest>('PATCH', `/password-resets/${id}/approve`),
+  dismissPasswordReset:  (id: string) => request<PasswordResetRequest>('PATCH', `/password-resets/${id}/dismiss`),
 
   // ── Dashboard ────────────────────────────────────────────────────
   dashboard: () => request<DashboardData>('GET', '/dashboard'),
@@ -442,6 +453,10 @@ export interface AuthUser {
   role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'platform_owner' | 'platform_admin';
   initials: string; teacher_id?: string | null; student_id?: string | null; parent_id?: string | null;
   must_change_password?: boolean;
+}
+export interface PasswordResetRequest {
+  id: string; email: string; status: 'pending' | 'approved' | 'resolved' | 'dismissed';
+  requested_at: string; approved_at: string | null; approved_by: string | null;
 }
 export interface School { id: string; name: string; code: string; address: string; phone: string; email: string; head_teacher: string; motto: string; logo_url?: string; }
 export interface AcademicYear { id: string; label: string; start_date: string; end_date: string; is_current: number; }

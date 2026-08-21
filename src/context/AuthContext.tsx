@@ -18,12 +18,14 @@ interface AuthContextValue {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<boolean>;
   loginStudent: (studentId: string) => Promise<boolean>;
+  resetPassword: (email: string, newPassword: string) => Promise<boolean>;
   logout: () => void;
   clearMustChangePassword: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
-  user: null, login: async () => false, loginStudent: async () => false, logout: () => {}, clearMustChangePassword: () => {},
+  user: null, login: async () => false, loginStudent: async () => false, resetPassword: async () => false,
+  logout: () => {}, clearMustChangePassword: () => {},
 });
 
 const stored = (): AuthUser | null => {
@@ -70,6 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Self-service reset after an admin approves a forgot-password request —
+  // no old/temp password involved. Logs the user straight in on success.
+  const resetPassword = async (email: string, newPassword: string): Promise<boolean> => {
+    try {
+      applyLoginResult(await api.resetPassword(email, newPassword));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const logout = () => {
     api.logout().catch(() => {});
     setUser(null);
@@ -86,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, loginStudent, logout, clearMustChangePassword }}>
+    <AuthContext.Provider value={{ user, login, loginStudent, resetPassword, logout, clearMustChangePassword }}>
       {children}
     </AuthContext.Provider>
   );
