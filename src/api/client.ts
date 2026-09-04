@@ -458,7 +458,11 @@ export interface PasswordResetRequest {
   id: string; email: string; status: 'pending' | 'approved' | 'resolved' | 'dismissed';
   requested_at: string; approved_at: string | null; approved_by: string | null;
 }
-export interface School { id: string; name: string; code: string; address: string; phone: string; email: string; head_teacher: string; motto: string; logo_url?: string; }
+export interface School {
+  id: string; name: string; code: string; address: string; phone: string; email: string;
+  head_teacher: string; motto: string; logo_url?: string;
+  matricule_prefix?: string; matricule_include_year?: boolean; matricule_digits?: number; matricule_separator?: string;
+}
 export interface AcademicYear { id: string; label: string; start_date: string; end_date: string; is_current: number; }
 export interface Term { id: string; academic_year_id: string; name: string; start_date: string; end_date: string; is_current: number; }
 export interface MarksSession { id: string; label: string | null; start_at: string; end_at: string; created_by: string | null; created_at: string; }

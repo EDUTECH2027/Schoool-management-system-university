@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, X, CalendarDays, AlertTriangle, CheckCircle2, BookOpen, Trash2, Plus, Pencil, Check, Download, Database, FileUp, DollarSign, Lock, Unlock, KeyRound } from 'lucide-react';
+import { Upload, X, CalendarDays, AlertTriangle, CheckCircle2, BookOpen, Trash2, Plus, Pencil, Check, Download, Database, FileUp, DollarSign, Lock, Unlock, KeyRound, Hash } from 'lucide-react';
 import type { Subject } from '../types';
 import { api, type ClassRecord, type Teacher as TeacherRaw, type AcademicYear, type Term, type MarksSession, type PasswordResetRequest } from '../api/client';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -116,6 +116,11 @@ export default function Settings() {
     return { feeName: '', amount: '100000', academicYear: `${yr}-${yr + 1}` };
   });
   const [defaultFeeSaved, setDefaultFeeSaved] = useState(false);
+
+  // Matricule (student ID) nomenclature — determines how every new student's
+  // ID is generated (see buildMatricule() in backend/src/utils/matricule.js).
+  const [matriculeCfg, setMatriculeCfg] = useState({ prefix: 'BSPS', includeYear: true, digits: 3, separator: '-' });
+  const [matriculeSaved, setMatriculeSaved] = useState(false);
 
   const [brandSaved,   setBrandSaved]   = useState(false);
   const [infoSaved,    setInfoSaved]    = useState(false);
@@ -255,6 +260,12 @@ export default function Settings() {
         setInfo(mapped);
         setSchoolInfo(mapped);
         if (school.name) setSchoolName(school.name);
+        setMatriculeCfg({
+          prefix:      school.matricule_prefix ?? 'BSPS',
+          includeYear: school.matricule_include_year ?? true,
+          digits:      school.matricule_digits ?? 3,
+          separator:   school.matricule_separator ?? '-',
+        });
       }
     }).catch(console.error);
   }, [setSchoolInfo, setSchoolName]);
@@ -390,6 +401,27 @@ export default function Settings() {
     setSchoolSub(sub.trim());
     setBrandSaved(true);
     setTimeout(() => setBrandSaved(false), 2000);
+  };
+
+  const matriculeDigits = Math.min(6, Math.max(1, Number(matriculeCfg.digits) || 3));
+  const previewMatricule = () => {
+    const parts = [matriculeCfg.prefix.trim() || 'STU'];
+    if (matriculeCfg.includeYear) parts.push(String(new Date().getFullYear()));
+    parts.push('1'.padStart(matriculeDigits, '0'));
+    return parts.join(matriculeCfg.separator);
+  };
+
+  const saveMatricule = async () => {
+    try {
+      await api.updateSchool({
+        matricule_prefix: matriculeCfg.prefix.trim() || 'BSPS',
+        matricule_include_year: matriculeCfg.includeYear,
+        matricule_digits: matriculeDigits,
+        matricule_separator: matriculeCfg.separator,
+      });
+      setMatriculeSaved(true);
+      setTimeout(() => setMatriculeSaved(false), 2000);
+    } catch (err) { console.error(err); }
   };
 
   const fields: { label: string; key: keyof typeof info; span?: boolean }[] = [
@@ -769,6 +801,86 @@ export default function Settings() {
             {infoSaved ? t.common.saved : t.settings.saveChanges}
           </button>
         </div>
+      </div>
+
+      {/* ── Matricule Format ──────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+            <Hash size={16} className="text-indigo-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-slate-800">
+              {lbl('Matricule Format', 'Format du matricule')}
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {lbl(
+                'Defines how every new student\'s ID (matricule) is generated.',
+                'Détermine comment l\'identifiant (matricule) de chaque nouvel élève est généré.'
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              {lbl('Prefix', 'Préfixe')}
+            </label>
+            <input
+              value={matriculeCfg.prefix}
+              onChange={e => setMatriculeCfg(p => ({ ...p, prefix: e.target.value.toUpperCase() }))}
+              placeholder="BSPS"
+              className="w-full py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              {lbl('Separator', 'Séparateur')}
+            </label>
+            <input
+              value={matriculeCfg.separator}
+              onChange={e => setMatriculeCfg(p => ({ ...p, separator: e.target.value.slice(0, 3) }))}
+              placeholder="-"
+              className="w-full py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">
+              {lbl('Sequence digits', 'Chiffres de séquence')}
+            </label>
+            <input
+              type="number" min={1} max={6}
+              value={matriculeCfg.digits}
+              onChange={e => setMatriculeCfg(p => ({ ...p, digits: Math.min(6, Math.max(1, Number(e.target.value) || 1)) }))}
+              className="w-full py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="flex flex-col justify-end">
+            <label className="flex items-center gap-2 py-2 px-3 text-sm border border-slate-200 rounded-lg cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={matriculeCfg.includeYear}
+                onChange={e => setMatriculeCfg(p => ({ ...p, includeYear: e.target.checked }))}
+                className="accent-indigo-600"
+              />
+              {lbl('Include year', 'Inclure l\'année')}
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2 text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-2 rounded-lg">
+          <CheckCircle2 size={13} />
+          {lbl(`Next matricule will look like: `, `Le prochain matricule ressemblera à : `)}
+          <span className="font-mono font-semibold">{previewMatricule()}</span>
+        </div>
+
+        <button
+          onClick={saveMatricule}
+          className="mt-5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+        >
+          {matriculeSaved ? t.common.saved : t.settings.saveChanges}
+        </button>
       </div>
 
       {/* ── Default Student Fee ───────────────────────────────── */}

@@ -15,7 +15,7 @@ const FEATURES = [
 ];
 
 export default function Login() {
-  const { login, resetPassword }                        = useAuth();
+  const { login, resetPassword, loginStudent }          = useAuth();
   const { logoUrl, schoolName, schoolSub, schoolInfo }   = useBranding();
   const { lang }                                         = useLanguage();
   const lbl = (en: string, fr: string) => lang === 'fr' ? fr : en;
@@ -26,6 +26,10 @@ export default function Login() {
   const [showPw, setShowPw]     = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
+
+  // No "@" → treat the identifier as a matricule: no password field, log in directly.
+  const trimmedEmail      = email.trim();
+  const looksLikeMatricule = trimmedEmail.length > 0 && !trimmedEmail.includes('@');
 
   // Forgot-password: request an admin-approved reset, then — once approved —
   // this same email lets the user set a new password with no old one needed.
@@ -48,8 +52,27 @@ export default function Login() {
     setLoading(false);
   };
 
+  const handleMatriculeSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!trimmedEmail) {
+      setError(lbl('Please enter your email or matricule.', 'Veuillez entrer votre email ou matricule.'));
+      return;
+    }
+    setLoading(true);
+    const ok = await loginStudent(trimmedEmail);
+    if (!ok) setError(lbl('Invalid matricule.', 'Matricule invalide.'));
+    setLoading(false);
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    if (resetMode) return handleResetSubmit(e);
+    if (looksLikeMatricule) return handleMatriculeSubmit(e);
+    return handleAdminSubmit(e);
+  };
+
   const handleEmailBlur = async () => {
-    if (!email.trim() || resetMode) return;
+    if (!email.trim() || resetMode || looksLikeMatricule) return;
     try {
       const { canReset } = await api.checkResetStatus(email.trim());
       if (canReset) { setResetMode(true); setError(''); setForgotSent(false); }
@@ -230,7 +253,7 @@ export default function Login() {
             </div>
 
             {/* ── Login form ───────────────────────────────────────── */}
-            <form onSubmit={resetMode ? handleResetSubmit : handleAdminSubmit} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
                   {lbl('Email address', 'Adresse email')}
@@ -240,12 +263,12 @@ export default function Login() {
                     <Mail size={15} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-200" />
                   </div>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={e => { setEmail(e.target.value); setError(''); if (resetMode) { setResetMode(false); setForgotSent(false); } }}
                     onBlur={handleEmailBlur}
-                    placeholder="admin@edutech.com"
-                    autoComplete="email"
+                    placeholder={lbl('Email or matricule', 'Email ou matricule')}
+                    autoComplete="username"
                     autoFocus
                     className="w-full pl-10 pr-4 py-3 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 focus:bg-white transition-all duration-200"
                   />
@@ -300,7 +323,7 @@ export default function Login() {
                     />
                   </div>
                 </>
-              ) : (
+              ) : looksLikeMatricule ? null : (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
