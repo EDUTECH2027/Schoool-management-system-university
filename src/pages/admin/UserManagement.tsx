@@ -9,6 +9,7 @@ const ROLE_CHIP: Record<string, string> = {
   teacher:     'bg-indigo-100 text-indigo-700',
   student:     'bg-emerald-100 text-emerald-700',
   parent:      'bg-violet-100 text-violet-700',
+  finance_officer: 'bg-sky-100 text-sky-700',
 };
 
 const BLANK: CreateUserInput = { name: '', email: '', password: '', role: 'teacher', initials: '' };
@@ -96,7 +97,7 @@ export default function UserManagement() {
               <label className="text-xs text-slate-500 mb-1 block">Role</label>
               <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
                 className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                {['super_admin','teacher','student','parent'].map(r => <option key={r} value={r} className="capitalize">{r.replace('_', ' ')}</option>)}
+                {['super_admin','finance_officer','teacher','student','parent'].map(r => <option key={r} value={r} className="capitalize">{r.replace('_', ' ')}</option>)}
               </select>
             </div>
           </div>

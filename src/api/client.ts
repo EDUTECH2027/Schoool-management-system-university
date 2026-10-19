@@ -11,7 +11,22 @@ function getToken(): string | null {
   }
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+// Identical GETs that are in flight at the same moment (e.g. two components mounting together and
+// asking for the same list) share ONE network request. Nothing is cached after it settles, so balances,
+// payment statuses and other live data are never served stale.
+const inflight = new Map<string, Promise<unknown>>();
+
+function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (method !== 'GET') return doRequest<T>(method, path, body);
+  const key = `${getToken() ?? ''}|${path}`;
+  const existing = inflight.get(key) as Promise<T> | undefined;
+  if (existing) return existing;
+  const p = doRequest<T>(method, path, body).finally(() => inflight.delete(key));
+  inflight.set(key, p);
+  return p;
+}
+
+async function doRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
   const token = getToken();
   const res = await fetch(`${BASE}/api${path}`, {
     method,
@@ -51,6 +66,15 @@ async function uploadRequest<T>(path: string, formData: FormData): Promise<T> {
 // Uploaded media (forum images/videos/voice notes) is stored as a relative
 // `/uploads/...` path — resolve it against the API origin (not the
 // frontend's own origin, which is a different port/host in dev and prod).
+// Thumbnail of an uploaded image (WebP, generated and cached by the API). Falls back to the original for
+// non-upload paths. Allowed widths: 64, 128, 256, 512, 1024.
+const THUMB_WIDTHS = [64, 128, 256, 512, 1024];
+export function mediaThumb(path: string, width: number): string {
+  if (!path.startsWith('/uploads/')) return path;
+  const w = THUMB_WIDTHS.find(x => x >= width) ?? THUMB_WIDTHS[THUMB_WIDTHS.length - 1];
+  return `${BASE}/uploads/_t/${w}/${path.slice('/uploads/'.length)}`;
+}
+
 export function mediaUrl(path?: string | null): string {
   if (!path) return '';
   return path.startsWith('/uploads/') ? `${BASE}${path}` : path;
@@ -269,6 +293,18 @@ export const api = {
   createThread:    (data: { title: string; tag?: string }) =>
     request<ForumThread>('POST', '/forums/threads', data),
   deleteThread:    (id: string) => request<void>('DELETE', `/forums/threads/${id}`),
+  // Newest `limit` messages (oldest→newest); pass `before` (a message id) to page back through older ones.
+  getMessagesPage: async (threadId: string, q: { limit: number; before?: string }) => {
+    const token = getToken();
+    const qs = new URLSearchParams({ limit: String(q.limit), ...(q.before ? { before: q.before } : {}) });
+    const res = await fetch(`${BASE}/api/forums/threads/${threadId}/messages?${qs}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    if (!res.ok) { const e = await res.json().catch(() => ({ error: res.statusText })); throw new Error(e.error ?? `HTTP ${res.status}`); }
+    return { items: (await res.json()) as ForumMessage[], hasMore: res.headers.get('X-Has-More') === '1' };
+  },
+  getForumMedia:   (threadId: string, q: { cursor?: string; kind?: 'image' | 'video'; limit?: number } = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined) as [string, string][]).toString();
+    return request<{ items: { id: string; kind: 'image' | 'video'; url: string; author: string; created_at: string }[]; next: string | null }>('GET', `/forums/threads/${threadId}/media${qs ? `?${qs}` : ''}`);
+  },
   getMessages:     (threadId: string) =>
     request<ForumMessage[]>('GET', `/forums/threads/${threadId}/messages`),
   sendMessage:     (threadId: string, data: Partial<ForumMessage>) =>
@@ -496,7 +532,7 @@ function toQS(params?: Record<string, string>): string {
 // ── Minimal type stubs (mirrors existing types + API shapes) ─────────────────
 export interface AuthUser {
   id: string; name: string; email: string;
-  role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'platform_owner' | 'platform_admin';
+  role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'finance_officer' | 'platform_owner' | 'platform_admin';
   initials: string; teacher_id?: string | null; student_id?: string | null; parent_id?: string | null;
   must_change_password?: boolean;
 }
@@ -641,3 +677,9 @@ export interface PlatformDashboardData {
   schoolsOverview: { month: string; active: number; new: number }[];
   recentActivities: SystemLog[];
 }
+
+// Low-level helpers for feature modules that live in their own files (e.g. payments.ts).
+export const rawRequest = request;
+export const rawUpload = uploadRequest;
+export const rawToken = getToken;
+export const API_BASE = BASE;

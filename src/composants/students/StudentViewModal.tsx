@@ -1,4 +1,5 @@
 import { X, Calendar, MapPin, Phone, BookOpen, Hash, User, FileText } from 'lucide-react';
+import LazyImage from '../ui/LazyImage';
 import type { Student } from '../../types';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { StatusBadge } from '../ui/Badge';
@@ -47,7 +48,7 @@ export default function StudentViewModal({ student, onClose, onEdit }: Props) {
           <div className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0 overflow-hidden
             ${student.gender === 'female' ? 'bg-pink-200 text-pink-700' : 'bg-blue-200 text-blue-700'}`}>
             {student.photoUrl
-              ? <img src={mediaUrl(student.photoUrl)} alt="" className="w-full h-full object-cover" />
+              ? <LazyImage path={student.photoUrl} size={96} ratio="1 / 1" className="w-full h-full" />
               : <>{student.firstName[0]}{student.lastName[0]}</>}
           </div>
           <div>

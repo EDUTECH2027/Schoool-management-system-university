@@ -340,7 +340,7 @@ export default function CertificateDesign({
   return (
     <div
       ref={containerRef}
-      className="relative shrink-0"
+      className="relative shrink-0" data-allow-light="certificate-paper"
       style={{
         width: `${CANVAS_W_MM}mm`, height: `${CANVAS_H_MM}mm`, background: spec.bg, color: spec.ink,
         fontFamily: spec.bodyFont, boxSizing: 'border-box', overflow: 'hidden',

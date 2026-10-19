@@ -1,13 +1,18 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazyPage, prefetchWhenIdle } from './lazyPage';
 import StudentLayout     from '../composants/layout/StudentLayout';
-import StudentDashboard  from '../pages/student/StudentDashboard';
-import StudentProfile    from '../pages/student/StudentProfile';
-import StudentMarks      from '../pages/student/StudentMarks';
-import StudentAttendance from '../pages/student/StudentAttendance';
-import StudentTimetable  from '../pages/student/StudentTimetable';
-import StudentFees       from '../pages/student/StudentFees';
-import StudentELearning  from '../pages/student/StudentELearning';
-import Classroom         from '../pages/elearning/Classroom';
+const StudentDashboard = lazyPage(() => import('../pages/student/StudentDashboard'));
+const StudentProfile = lazyPage(() => import('../pages/student/StudentProfile'));
+const StudentMarks = lazyPage(() => import('../pages/student/StudentMarks'));
+const StudentAttendance = lazyPage(() => import('../pages/student/StudentAttendance'));
+const StudentTimetable = lazyPage(() => import('../pages/student/StudentTimetable'));
+const StudentFees = lazyPage(() => import('../pages/student/StudentFees'));
+const StudentELearning = lazyPage(() => import('../pages/student/StudentELearning'));
+const Classroom = lazyPage(() => import('../pages/elearning/Classroom'));
+
+// Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
+void StudentDashboard.preload();
+prefetchWhenIdle([StudentProfile, StudentMarks, StudentAttendance, StudentTimetable, StudentFees, StudentELearning, Classroom]);
 
 export default function StudentRoutes() {
   return (

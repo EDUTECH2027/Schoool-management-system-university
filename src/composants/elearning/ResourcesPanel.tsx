@@ -5,6 +5,7 @@ import type { ElCourse, ElResource, ElSession } from '../../api/client';
 import { useLanguage } from '../../i18n/LanguageContext';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import { EmptyState } from './shared';
+import RefreshButton from '../ui/RefreshButton';
 
 const ALLOWED = '.pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.png,.jpg,.jpeg,.gif,.mp4,.webm,.mp3';
 const PREVIEWABLE = /\.(pdf|png|jpe?g|gif|mp4|webm|mp3|txt)$/i;
@@ -33,10 +34,10 @@ export default function ResourcesPanel({ mode, courses = [], sessions = [], filt
 
   const load = useCallback(async () => {
     try { setItems(await api.elResources(filter)); setError(''); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed to load'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Failed to load'); throw e; }
     finally { setLoading(false); }
   }, [filter]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load().catch(() => {}); }, [load]);
 
   const grouped = useMemo(() => {
     const m = new Map<string, ElResource[]>();
@@ -64,14 +65,16 @@ export default function ResourcesPanel({ mode, courses = [], sessions = [], filt
 
   return (
     <div className="space-y-4">
-      {(mode === 'teacher') && (
-        <div className="flex justify-end">
+      {/* Refresh sits first, in the same place as in every gallery */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <RefreshButton onRefresh={load} />
+        {mode === 'teacher' && (
           <button onClick={() => setAdding(true)} disabled={!courses.length}
             className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
             <Plus size={16} /> {fr ? 'Partager un support' : 'Share Materials'}
           </button>
-        </div>
-      )}
+        )}
+      </div>
       {error && <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
       {loading ? <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-400" /></div>
         : items.length === 0 ? (
@@ -120,7 +123,7 @@ export default function ResourcesPanel({ mode, courses = [], sessions = [], filt
           </section>
         ))}
 
-      {adding && <ShareModal courses={courses} sessions={sessions} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); load(); }} />}
+      {adding && <ShareModal courses={courses} sessions={sessions} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); load().catch(() => {}); }} />}
       {del && (
         <ConfirmDialog title={fr ? 'Supprimer ce support ?' : 'Delete this material?'} message={del.title}
           sub={fr ? 'Les étudiants n’y auront plus accès.' : 'Students will lose access to it.'}

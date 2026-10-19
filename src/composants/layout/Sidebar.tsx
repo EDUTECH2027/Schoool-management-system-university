@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, BookOpen, GraduationCap,
   ClipboardCheck, FileText, Wallet, Calendar, UserRound, Settings,
   MessageSquare, Megaphone, Mail, MessageCircle, ChevronDown, BadgeDollarSign, ShieldCheck, ArrowDownCircle,
-  Stamp, Video,
+  Stamp, Video, Landmark,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -39,6 +39,7 @@ export default function Sidebar() {
     { label: t.nav.fees,         to: '/fees',         icon: Wallet           },
     { label: t.nav.timetable,    to: '/timetable',    icon: Calendar         },
     { label: 'E-Learning',       to: '/e-learning',   icon: Video            },
+    { label: lang === 'fr' ? 'Finances' : 'Finance', to: '/finance', icon: Landmark },
     { label: t.nav.parents,      to: '/parents',      icon: UserRound        },
   ];
 

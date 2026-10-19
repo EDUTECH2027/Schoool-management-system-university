@@ -1,16 +1,21 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazyPage, prefetchWhenIdle } from './lazyPage';
 import TeacherLayout      from '../composants/layout/TeacherLayout';
-import TeacherDashboard   from '../pages/teacher/TeacherDashboard';
-import TeacherProfile     from '../pages/teacher/TeacherProfile';
-import TeacherMyClass     from '../pages/teacher/TeacherMyClass';
-import TeacherMarks       from '../pages/teacher/TeacherMarks';
-import TeacherAttendance  from '../pages/teacher/TeacherAttendance';
-import TeacherMyAttendance from '../pages/teacher/TeacherMyAttendance';
-import TeacherTimetable   from '../pages/teacher/TeacherTimetable';
-import TeacherBehavior    from '../pages/teacher/TeacherBehavior';
-import TeacherSalary      from '../pages/teacher/TeacherSalary';
-import TeacherELearning   from '../pages/teacher/TeacherELearning';
-import Classroom          from '../pages/elearning/Classroom';
+const TeacherDashboard = lazyPage(() => import('../pages/teacher/TeacherDashboard'));
+const TeacherProfile = lazyPage(() => import('../pages/teacher/TeacherProfile'));
+const TeacherMyClass = lazyPage(() => import('../pages/teacher/TeacherMyClass'));
+const TeacherMarks = lazyPage(() => import('../pages/teacher/TeacherMarks'));
+const TeacherAttendance = lazyPage(() => import('../pages/teacher/TeacherAttendance'));
+const TeacherMyAttendance = lazyPage(() => import('../pages/teacher/TeacherMyAttendance'));
+const TeacherTimetable = lazyPage(() => import('../pages/teacher/TeacherTimetable'));
+const TeacherBehavior = lazyPage(() => import('../pages/teacher/TeacherBehavior'));
+const TeacherSalary = lazyPage(() => import('../pages/teacher/TeacherSalary'));
+const TeacherELearning = lazyPage(() => import('../pages/teacher/TeacherELearning'));
+const Classroom = lazyPage(() => import('../pages/elearning/Classroom'));
+
+// Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
+void TeacherDashboard.preload();
+prefetchWhenIdle([TeacherProfile, TeacherMyClass, TeacherMarks, TeacherAttendance, TeacherMyAttendance, TeacherTimetable, TeacherBehavior, TeacherSalary, TeacherELearning, Classroom]);
 
 export default function TeacherRoutes() {
   return (

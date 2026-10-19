@@ -7,7 +7,8 @@ import StudentViewModal from '../composants/students/StudentViewModal';
 import StudentEditModal from '../composants/students/StudentEditModal';
 import StudentAddModal  from '../composants/students/StudentAddModal';
 import type { FeeData } from '../composants/students/StudentAddModal';
-import { api, mediaUrl, type CreateStudentInput } from '../api/client';
+import { api, type CreateStudentInput } from '../api/client';
+import LazyImage from '../composants/ui/LazyImage';
 import { mapStudent, mapClass } from '../api/mappers';
 
 export default function Students() {
@@ -267,7 +268,7 @@ export default function Students() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden
                         ${s.gender === 'female' ? 'bg-pink-100 text-pink-700' : 'bg-blue-100 text-blue-700'}`}>
                         {s.photoUrl
-                          ? <img src={mediaUrl(s.photoUrl)} alt="" className="w-full h-full object-cover" />
+                          ? <LazyImage path={s.photoUrl} size={32} ratio="1 / 1" className="w-full h-full" fallback={<>{s.firstName[0]}{s.lastName[0]}</>} />
                           : <>{s.firstName[0]}{s.lastName[0]}</>}
                       </div>
                       <div>

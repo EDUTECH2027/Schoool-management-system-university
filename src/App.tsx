@@ -13,6 +13,7 @@ const TeacherRoutes  = lazy(() => import('./routes/TeacherRoutes'));
 const StudentRoutes  = lazy(() => import('./routes/StudentRoutes'));
 const ParentRoutes   = lazy(() => import('./routes/ParentRoutes'));
 const PlatformRoutes = lazy(() => import('./routes/PlatformRoutes'));
+const FinanceRoutes  = lazy(() => import('./routes/FinanceRoutes'));
 
 function RouteLoadingFallback() {
   return (
@@ -34,6 +35,7 @@ function AppRoutes() {
   else if (user.role === 'teacher') RoleRoutes = TeacherRoutes;
   else if (user.role === 'student') RoleRoutes = StudentRoutes;
   else if (user.role === 'parent')  RoleRoutes = ParentRoutes;
+  else if (user.role === 'finance_officer') RoleRoutes = FinanceRoutes;
 
   if (!RoleRoutes) return <Routes><Route path="*" element={<Login />} /></Routes>;
 

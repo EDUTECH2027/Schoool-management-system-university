@@ -5,6 +5,18 @@
     <link rel="icon" type="image/png" href="/veloce-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>School App</title>
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // Apply the saved (or OS-preferred) theme before first paint to avoid a flash of the wrong theme.
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) { document.documentElement.classList.add('dark'); document.documentElement.style.colorScheme = 'dark'; }
+        } catch (e) {}
+      })();
+    </script>
+    <style>html.dark body { background: #121212; }</style>
   </head>
   <body>
     <div id="root"></div>

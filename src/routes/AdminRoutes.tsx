@@ -1,24 +1,33 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazyPage, prefetchWhenIdle } from './lazyPage';
 import Layout          from '../composants/layout/Layout';
-import Dashboard       from '../pages/Dashboard';
-import Students        from '../pages/Students';
-import Classes         from '../pages/Classes';
-import Teachers        from '../pages/Teachers';
-import Attendance      from '../pages/Attendance';
-import Assessments     from '../pages/Assessments';
-import Transcripts     from '../pages/Transcripts';
-import Fees            from '../pages/Fees';
-import Timetable       from '../pages/Timetable';
-import Parents         from '../pages/Parents';
-import Settings        from '../pages/Settings';
-import Announcements   from '../pages/Announcements';
-import EmailAlerts     from '../pages/EmailAlerts';
-import DiscussionForums from '../pages/DiscussionForums';
-import TeacherPayment  from '../pages/TeacherPayment';
-import Certificates    from '../pages/Certificates';
-import UserManagement  from '../pages/admin/UserManagement';
-import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
-import AdminELearning from '../pages/admin/AdminELearning';
+const Dashboard = lazyPage(() => import('../pages/Dashboard'));
+const Students = lazyPage(() => import('../pages/Students'));
+const Classes = lazyPage(() => import('../pages/Classes'));
+const Teachers = lazyPage(() => import('../pages/Teachers'));
+const Attendance = lazyPage(() => import('../pages/Attendance'));
+const Assessments = lazyPage(() => import('../pages/Assessments'));
+const Transcripts = lazyPage(() => import('../pages/Transcripts'));
+const Fees = lazyPage(() => import('../pages/Fees'));
+const Timetable = lazyPage(() => import('../pages/Timetable'));
+const Parents = lazyPage(() => import('../pages/Parents'));
+const Settings = lazyPage(() => import('../pages/Settings'));
+const Announcements = lazyPage(() => import('../pages/Announcements'));
+const EmailAlerts = lazyPage(() => import('../pages/EmailAlerts'));
+const DiscussionForums = lazyPage(() => import('../pages/DiscussionForums'));
+const TeacherPayment = lazyPage(() => import('../pages/TeacherPayment'));
+const Certificates = lazyPage(() => import('../pages/Certificates'));
+const UserManagement = lazyPage(() => import('../pages/admin/UserManagement'));
+const AdminWithdrawals = lazyPage(() => import('../pages/admin/AdminWithdrawals'));
+const FinanceDashboard      = lazyPage(() => import('../pages/finance/FinanceDashboard'));
+const FinanceTransactions   = lazyPage(() => import('../pages/finance/FinanceTransactions'));
+const FinanceReconciliation = lazyPage(() => import('../pages/finance/FinanceReconciliation'));
+const FinanceReports        = lazyPage(() => import('../pages/finance/FinanceReports'));
+const AdminELearning = lazyPage(() => import('../pages/admin/AdminELearning'));
+
+// Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
+void Dashboard.preload();
+prefetchWhenIdle([Students, Classes, Teachers, Attendance, Assessments, Fees, Parents, Settings, Announcements, EmailAlerts, DiscussionForums, UserManagement, AdminWithdrawals, FinanceDashboard, FinanceTransactions, FinanceReconciliation, FinanceReports, AdminELearning]);
 
 export default function AdminRoutes() {
   return (
@@ -44,6 +53,10 @@ export default function AdminRoutes() {
         <Route path="user-management"   element={<UserManagement  />} />
         <Route path="withdrawals"       element={<AdminWithdrawals />} />
         <Route path="e-learning"        element={<AdminELearning />} />
+        <Route path="finance"                element={<FinanceDashboard />} />
+        <Route path="finance/transactions"   element={<FinanceTransactions />} />
+        <Route path="finance/reconciliation" element={<FinanceReconciliation />} />
+        <Route path="finance/reports"        element={<FinanceReports />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

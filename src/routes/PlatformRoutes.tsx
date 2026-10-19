@@ -1,18 +1,23 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazyPage, prefetchWhenIdle } from './lazyPage';
 import PlatformLayout        from '../composants/layout/PlatformLayout';
-import PlatformDashboard     from '../pages/platform/PlatformDashboard';
-import Schools               from '../pages/platform/Schools';
-import SchoolDetail          from '../pages/platform/SchoolDetail';
-import PlatformUsers         from '../pages/platform/PlatformUsers';
-import Subscriptions         from '../pages/platform/Subscriptions';
-import Reports               from '../pages/platform/Reports';
-import SystemLogs            from '../pages/platform/SystemLogs';
-import PlansBilling          from '../pages/platform/PlansBilling';
-import Features              from '../pages/platform/Features';
-import PlatformAnnouncements from '../pages/platform/PlatformAnnouncements';
-import RolesPermissions      from '../pages/platform/RolesPermissions';
-import PlatformSettings      from '../pages/platform/PlatformSettings';
-import BackupRestore         from '../pages/platform/BackupRestore';
+const PlatformDashboard = lazyPage(() => import('../pages/platform/PlatformDashboard'));
+const Schools = lazyPage(() => import('../pages/platform/Schools'));
+const SchoolDetail = lazyPage(() => import('../pages/platform/SchoolDetail'));
+const PlatformUsers = lazyPage(() => import('../pages/platform/PlatformUsers'));
+const Subscriptions = lazyPage(() => import('../pages/platform/Subscriptions'));
+const Reports = lazyPage(() => import('../pages/platform/Reports'));
+const SystemLogs = lazyPage(() => import('../pages/platform/SystemLogs'));
+const PlansBilling = lazyPage(() => import('../pages/platform/PlansBilling'));
+const Features = lazyPage(() => import('../pages/platform/Features'));
+const PlatformAnnouncements = lazyPage(() => import('../pages/platform/PlatformAnnouncements'));
+const RolesPermissions = lazyPage(() => import('../pages/platform/RolesPermissions'));
+const PlatformSettings = lazyPage(() => import('../pages/platform/PlatformSettings'));
+const BackupRestore = lazyPage(() => import('../pages/platform/BackupRestore'));
+
+// Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
+void PlatformDashboard.preload();
+prefetchWhenIdle([Schools, SchoolDetail, PlatformUsers, Subscriptions, Reports, SystemLogs, PlansBilling, Features, PlatformAnnouncements, RolesPermissions, PlatformSettings, BackupRestore]);
 
 export default function PlatformRoutes() {
   return (

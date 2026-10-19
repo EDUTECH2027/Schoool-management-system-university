@@ -116,8 +116,7 @@ export default function Login() {
   return (
     /* ── Full-page dark background ──────────────────────────────── */
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #0f172a 100%)' }}
+      className="login-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
     >
       {/* Dot grid overlay */}
       <div

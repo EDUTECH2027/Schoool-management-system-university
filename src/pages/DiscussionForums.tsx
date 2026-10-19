@@ -4,8 +4,12 @@ import {
   Image as ImageIcon, Video, Users, MoreVertical, X, Trash2, Loader2, CheckCircle2, Circle,
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+import LazyImage from '../composants/ui/LazyImage';
+import MediaGallery from '../composants/ui/MediaGallery';
 import { api, mediaUrl, type ForumThread, type ForumMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+
+const PAGE_SIZE = 30;
 
 const tagColor: Record<string, string> = {
   general:  'bg-slate-100 text-slate-600',
@@ -86,6 +90,16 @@ export default function DiscussionForums() {
   const bottomRef   = useRef<HTMLDivElement>(null);
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const recStartRef = useRef(0);
+  const skipScrollRef = useRef(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
+  useEffect(() => {
+    if (!showGallery) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape' && !document.querySelector('[data-testid="lightbox"]')) setShowGallery(false); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [showGallery]);
 
   const myId = user?.id;
   const isModerator = user?.role === 'super_admin' || user?.role === 'head_teacher';
@@ -98,17 +112,31 @@ export default function DiscussionForums() {
       .finally(() => setLoadingThreads(false));
   }, []);
 
+  // Only the newest PAGE_SIZE messages are fetched up front; older ones load on demand.
   const loadMessages = useCallback(async (threadId: string) => {
     setLoadingMsgs(true);
     setSelectedIds(new Set());
     try {
-      const data = await api.getMessages(threadId);
-      setMsgs(data.map(m => toLocalMsg(m, myId)));
+      const { items, hasMore: more } = await api.getMessagesPage(threadId, { limit: PAGE_SIZE });
+      setMsgs(items.map(m => toLocalMsg(m, myId)));
+      setHasMore(more);
     } catch (err) {
       console.error(err);
     }
     setLoadingMsgs(false);
   }, [myId]);
+
+  const loadOlder = async () => {
+    if (!activeId || !msgs.length || loadingOlder) return;
+    setLoadingOlder(true);
+    try {
+      const { items, hasMore: more } = await api.getMessagesPage(activeId, { limit: PAGE_SIZE, before: msgs[0].id });
+      skipScrollRef.current = true;                       // keep the reader's position; don't jump to the bottom
+      setMsgs(prev => [...items.map(m => toLocalMsg(m, myId)), ...prev]);
+      setHasMore(more);
+    } catch (err) { console.error(err); }
+    setLoadingOlder(false);
+  };
 
   useEffect(() => {
     if (!activeId) return;
@@ -116,6 +144,7 @@ export default function DiscussionForums() {
   }, [activeId, loadMessages]);
 
   useEffect(() => {
+    if (skipScrollRef.current) { skipScrollRef.current = false; return; }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [msgs.length]);
 
@@ -393,6 +422,13 @@ export default function DiscussionForums() {
                 </p>
               </div>
               <button
+                onClick={() => setShowGallery(true)}
+                className="p-2 hover:bg-slate-100 text-slate-500 rounded-lg transition-colors"
+                title={lbl('Shared media', 'Médias partagés')} aria-label={lbl('Shared media', 'Médias partagés')}
+              >
+                <ImageIcon size={16} />
+              </button>
+              <button
                 onClick={() => deleteThread(activeThread.id)}
                 className="p-2 hover:bg-red-50 hover:text-red-500 text-slate-400 rounded-lg transition-colors"
                 title={lbl('Delete thread', 'Supprimer le fil')}
@@ -405,11 +441,38 @@ export default function DiscussionForums() {
             </div>
           )}
 
+          {showGallery && activeThread && (
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setShowGallery(false)}>
+              <div role="dialog" aria-modal="true" className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[88vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                  <h2 className="font-semibold text-slate-800 truncate">{lbl('Shared media', 'Médias partagés')} — {activeThread.title}</h2>
+                  <button onClick={() => setShowGallery(false)} aria-label="Close" className="p-1 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+                </div>
+                <div className="p-5 overflow-y-auto">
+                  <MediaGallery
+                    resetKey={activeThread.id}
+                    fetchPage={async ({ cursor, kind }) => {
+                      const r = await api.getForumMedia(activeThread.id, { cursor, kind, limit: 24 });
+                      return { items: r.items.map(i => ({ id: i.id, kind: i.kind, url: i.url, caption: i.author, date: i.created_at })), next: r.next };
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-slate-50/40">
             {loadingMsgs && (
               <div className="flex items-center justify-center py-8">
                 <Loader2 size={20} className="text-indigo-400 animate-spin" />
+              </div>
+            )}
+            {!loadingMsgs && hasMore && (
+              <div className="flex justify-center">
+                <button onClick={loadOlder} disabled={loadingOlder} className="px-3 py-1.5 rounded-full border border-slate-300 bg-white text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-60 flex items-center gap-2">
+                  {loadingOlder && <Loader2 size={12} className="animate-spin" />}{lbl('Load earlier messages', 'Charger les messages précédents')}
+                </button>
               </div>
             )}
             {!loadingMsgs && msgs.map(msg => {
@@ -449,13 +512,15 @@ export default function DiscussionForums() {
 
                   {msg.type === 'image' && (
                     <div className={`rounded-2xl overflow-hidden max-w-[240px] shadow-sm ${msg.mine ? 'rounded-br-sm' : 'rounded-bl-sm border border-slate-200'} ${isSelected ? 'ring-2 ring-indigo-400' : ''}`}>
-                      <img src={mediaUrl(msg.image_url)} alt="shared" className="w-full max-h-52 object-cover block" />
+                      <a href={mediaUrl(msg.image_url)} target="_blank" rel="noreferrer" title={lbl('Open original', 'Ouvrir l’original')}>
+                        <LazyImage path={msg.image_url} size={256} ratio="4 / 3" alt="shared" className="w-full" />
+                      </a>
                     </div>
                   )}
 
                   {msg.type === 'video' && (
                     <div className={`rounded-2xl overflow-hidden max-w-[280px] shadow-sm ${msg.mine ? 'rounded-br-sm' : 'rounded-bl-sm border border-slate-200'} ${isSelected ? 'ring-2 ring-indigo-400' : ''}`}>
-                      <video controls src={mediaUrl(msg.video_url)} className="w-full max-h-56 block" />
+                      <video controls preload="none" src={mediaUrl(msg.video_url)} className="w-full max-h-56 block" />
                     </div>
                   )}
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import LazyImage from '../../composants/ui/LazyImage';
 import { FileText, Paperclip, X, Loader2 } from 'lucide-react';
 import { api, mediaUrl } from '../../api/client';
 import type { Student } from '../../api/client';
@@ -66,7 +67,7 @@ export default function StudentProfile() {
         <div className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shrink-0 overflow-hidden
           ${student.gender === 'female' ? 'bg-pink-200 text-pink-700' : 'bg-blue-200 text-blue-700'}`}>
           {student.photo_url
-            ? <img src={mediaUrl(student.photo_url)} alt="" className="w-full h-full object-cover" />
+            ? <LazyImage path={student.photo_url} size={96} ratio="1 / 1" className="w-full h-full" />
             : <>{student.first_name[0]}{student.last_name[0]}</>}
         </div>
         <div>
