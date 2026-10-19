@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, UserRound, Users, FileText, ClipboardCheck,
-  Calendar, MessageSquare, BadgeDollarSign, GraduationCap, LogOut,
+  Calendar, MessageSquare, BadgeDollarSign, GraduationCap, LogOut, Video,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -25,6 +25,7 @@ export default function TeacherSidebar() {
     { label: t.portal.myAttendance,     to: '/teacher/my-attendance', icon: ClipboardCheck   },
     { label: t.nav.timetable,           to: '/teacher/timetable',     icon: Calendar         },
     { label: t.portal.salary,           to: '/teacher/salary',        icon: BadgeDollarSign  },
+    { label: 'E-Learning',              to: '/teacher/e-learning',    icon: Video            },
   ];
 
   return (

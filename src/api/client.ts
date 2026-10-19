@@ -366,6 +366,52 @@ export const api = {
   portalParentChildBehavior:  (sid: string) => request<BehaviorRecord[]>('GET', `/portal/parent/children/${sid}/behavior`),
   portalParentChildGpaSummary:(sid: string) => request<GpaSummary>('GET', `/portal/parent/children/${sid}/gpa-summary`),
 
+  // ── E-Learning (live classes) ──────────────────────────────────────
+  elCourses:  () => request<ElCourse[]>('GET', '/elearning/courses'),
+  elSessions: (q: { status?: string; class_id?: string } = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][]).toString();
+    return request<ElSession[]>('GET', `/elearning/sessions${qs ? `?${qs}` : ''}`);
+  },
+  elSession:  (id: string) => request<ElSession>('GET', `/elearning/sessions/${id}`),
+  elCreateSession: (data: { class_id: string; subject_name: string; title: string; description?: string; starts_at?: string; ends_at?: string; instant?: boolean }) =>
+    request<ElSession>('POST', '/elearning/sessions', data),
+  elUpdateSession: (id: string, data: { title?: string; description?: string; starts_at?: string; ends_at?: string }) =>
+    request<ElSession>('PUT', `/elearning/sessions/${id}`, data),
+  elCancel: (id: string) => request<ElSession>('POST', `/elearning/sessions/${id}/cancel`),
+  elStart:  (id: string) => request<ElSession>('POST', `/elearning/sessions/${id}/start`),
+  elEnd:    (id: string) => request<ElSession>('POST', `/elearning/sessions/${id}/end`),
+  elJoin:   (id: string) => request<ElJoin>('POST', `/elearning/sessions/${id}/join`),
+  elHeartbeat: (id: string, attendance_id: string) =>
+    request<{ status: ElStatus }>('POST', `/elearning/sessions/${id}/heartbeat`, { attendance_id }),
+  elLeave:  (id: string, attendance_id: string) =>
+    request<{ ok: true }>('POST', `/elearning/sessions/${id}/leave`, { attendance_id }),
+  elAttendance: (id: string) => request<ElAttendanceReport>('GET', `/elearning/sessions/${id}/attendance`),
+  elResources: (q: { class_id?: string; subject_name?: string; session_id?: string } = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][]).toString();
+    return request<ElResource[]>('GET', `/elearning/resources${qs ? `?${qs}` : ''}`);
+  },
+  elUploadResource: (form: FormData) => uploadRequest<ElResource>('/elearning/resources', form),
+  elDeleteResource: (id: string) => request<void>('DELETE', `/elearning/resources/${id}`),
+  // Files are protected (Bearer token), so fetch as a blob rather than linking to a URL.
+  elResourceBlob: async (id: string, inline = false) => {
+    const token = getToken();
+    const res = await fetch(`${BASE}/api/elearning/resources/${id}/file${inline ? '?inline=1' : ''}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    if (!res.ok) { const e = await res.json().catch(() => ({ error: res.statusText })); throw new Error(e.error ?? `HTTP ${res.status}`); }
+    return res.blob();
+  },
+  elNotifications: () => request<{ items: ElNotification[]; unread: number }>('GET', '/elearning/notifications'),
+  elMarkRead: (ids?: string[]) => request<{ ok: true }>('POST', '/elearning/notifications/read', ids ? { ids } : {}),
+  // Best-effort leave when the tab is closing — keepalive lets the request outlive the page.
+  elLeaveBeacon: (id: string, attendance_id: string) => {
+    const token = getToken();
+    if (!token) return;
+    fetch(`${BASE}/api/elearning/sessions/${id}/leave`, {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ attendance_id }),
+    }).catch(() => {});
+  },
+
   // ── Platform (Super Admin) ─────────────────────────────────────────
   platform: {
     getDashboard: () => request<PlatformDashboardData>('GET', '/platform/dashboard'),
@@ -453,6 +499,34 @@ export interface AuthUser {
   role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'platform_owner' | 'platform_admin';
   initials: string; teacher_id?: string | null; student_id?: string | null; parent_id?: string | null;
   must_change_password?: boolean;
+}
+export type ElStatus = 'scheduled' | 'live' | 'ended' | 'cancelled';
+export interface ElCourse {
+  class_id: string; class_name: string; subject_name: string;
+  teacher_id: string; teacher_name: string | null; student_count?: number;
+}
+export interface ElSession {
+  id: string; class_id: string; class_name: string | null; subject_name: string;
+  teacher_id: string; teacher_name: string | null; title: string; description: string | null;
+  starts_at: string; ends_at: string; status: ElStatus; effective_status: ElStatus | 'missed';
+  started_at: string | null; ended_at: string | null; attendance_count?: number;
+}
+export interface ElJoin {
+  domain: string; roomName: string; jwt: string; scriptUrl: string;
+  attendance_id: string; moderator: boolean; session: ElSession;
+}
+export interface ElAttendanceReport {
+  session: ElSession; enrolled_count: number;
+  attendees: { user_id: string; name: string; role: string; student_number: string | null; first_joined_at: string; last_left_at: string | null; total_seconds: number; online: boolean; joins: number }[];
+  absent: { student_id: string; name: string; student_number: string }[];
+}
+export interface ElResource {
+  id: string; class_id: string; subject_name: string; teacher_id: string; session_id: string | null;
+  topic: string | null; kind: 'file' | 'link'; title: string; url: string | null; original_name: string | null;
+  mime_type: string | null; size_bytes: number | null; created_at: string; teacher_name?: string; class_name?: string;
+}
+export interface ElNotification {
+  id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string;
 }
 export interface PasswordResetRequest {
   id: string; email: string; status: 'pending' | 'approved' | 'resolved' | 'dismissed';

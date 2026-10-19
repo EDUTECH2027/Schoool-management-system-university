@@ -18,6 +18,7 @@ import TeacherPayment  from '../pages/TeacherPayment';
 import Certificates    from '../pages/Certificates';
 import UserManagement  from '../pages/admin/UserManagement';
 import AdminWithdrawals from '../pages/admin/AdminWithdrawals';
+import AdminELearning from '../pages/admin/AdminELearning';
 
 export default function AdminRoutes() {
   return (
@@ -42,6 +43,7 @@ export default function AdminRoutes() {
         <Route path="teacher-payment"   element={<TeacherPayment  />} />
         <Route path="user-management"   element={<UserManagement  />} />
         <Route path="withdrawals"       element={<AdminWithdrawals />} />
+        <Route path="e-learning"        element={<AdminELearning />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

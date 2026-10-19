@@ -9,6 +9,8 @@ import TeacherMyAttendance from '../pages/teacher/TeacherMyAttendance';
 import TeacherTimetable   from '../pages/teacher/TeacherTimetable';
 import TeacherBehavior    from '../pages/teacher/TeacherBehavior';
 import TeacherSalary      from '../pages/teacher/TeacherSalary';
+import TeacherELearning   from '../pages/teacher/TeacherELearning';
+import Classroom          from '../pages/elearning/Classroom';
 
 export default function TeacherRoutes() {
   return (
@@ -25,6 +27,8 @@ export default function TeacherRoutes() {
         <Route path="timetable"     element={<TeacherTimetable   />} />
         <Route path="behavior"      element={<TeacherBehavior    />} />
         <Route path="salary"        element={<TeacherSalary      />} />
+        <Route path="e-learning"       element={<TeacherELearning />} />
+        <Route path="e-learning/room/:id" element={<Classroom />} />
       </Route>
       <Route path="*" element={<Navigate to="/teacher/dashboard" replace />} />
     </Routes>
