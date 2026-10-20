@@ -8,11 +8,15 @@ const StudentAttendance = lazyPage(() => import('../pages/student/StudentAttenda
 const StudentTimetable = lazyPage(() => import('../pages/student/StudentTimetable'));
 const StudentFees = lazyPage(() => import('../pages/student/StudentFees'));
 const StudentELearning = lazyPage(() => import('../pages/student/StudentELearning'));
+const StudentRegistration = lazyPage(() => import('../pages/student/StudentRegistration'));
+const StudentResults = lazyPage(() => import('../pages/student/StudentResults'));
+const StudentExams = lazyPage(() => import('../pages/student/StudentExams'));
+const StudentDocuments = lazyPage(() => import('../pages/student/StudentDocuments'));
 const Classroom = lazyPage(() => import('../pages/elearning/Classroom'));
 
 // Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
 void StudentDashboard.preload();
-prefetchWhenIdle([StudentProfile, StudentMarks, StudentAttendance, StudentTimetable, StudentFees, StudentELearning, Classroom]);
+prefetchWhenIdle([StudentProfile, StudentMarks, StudentAttendance, StudentTimetable, StudentFees, StudentELearning, Classroom, StudentRegistration, StudentResults, StudentExams, StudentDocuments]);
 
 export default function StudentRoutes() {
   return (
@@ -26,6 +30,10 @@ export default function StudentRoutes() {
         <Route path="attendance" element={<StudentAttendance />} />
         <Route path="timetable"  element={<StudentTimetable  />} />
         <Route path="fees"       element={<StudentFees       />} />
+        <Route path="registration" element={<StudentRegistration />} />
+        <Route path="results"      element={<StudentResults />} />
+        <Route path="exams"        element={<StudentExams />} />
+        <Route path="documents"    element={<StudentDocuments />} />
         <Route path="e-learning"  element={<StudentELearning />} />
         <Route path="e-learning/room/:id" element={<Classroom />} />
       </Route>

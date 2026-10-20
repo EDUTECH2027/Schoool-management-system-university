@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, UserRound, FileText, ClipboardCheck, Calendar, GraduationCap, Wallet, LogOut, Video,
+  LayoutDashboard, UserRound, FileText, ClipboardCheck, Calendar, GraduationCap, Wallet, LogOut, Video, ClipboardSignature, Award, CalendarClock, FolderOpen,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -17,7 +17,11 @@ export default function StudentSidebar() {
   const nav = [
     { label: t.nav.dashboard,           to: '/student/dashboard',  icon: LayoutDashboard },
     { label: t.portal.myProfile,         to: '/student/profile',    icon: UserRound       },
+    { label: lang === 'fr' ? 'Inscription aux cours' : 'Course registration', to: '/student/registration', icon: ClipboardSignature },
     { label: t.portal.myMarks,           to: '/student/marks',      icon: FileText        },
+    { label: lang === 'fr' ? 'Résultats & réclamations' : 'Results & appeals', to: '/student/results', icon: Award },
+    { label: lang === 'fr' ? 'Mes examens' : 'My exams', to: '/student/exams', icon: CalendarClock },
+    { label: lang === 'fr' ? 'Dossier & documents' : 'File & documents', to: '/student/documents', icon: FolderOpen },
     { label: t.portal.myAttendanceRecord,to: '/student/attendance', icon: ClipboardCheck  },
     { label: t.portal.myTimetable,       to: '/student/timetable',  icon: Calendar        },
     { label: t.portal.myFees,            to: '/student/fees',       icon: Wallet          },

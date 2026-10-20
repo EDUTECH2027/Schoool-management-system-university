@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
@@ -14,6 +14,8 @@ const StudentRoutes  = lazy(() => import('./routes/StudentRoutes'));
 const ParentRoutes   = lazy(() => import('./routes/ParentRoutes'));
 const PlatformRoutes = lazy(() => import('./routes/PlatformRoutes'));
 const FinanceRoutes  = lazy(() => import('./routes/FinanceRoutes'));
+const AcademicRoutes = lazy(() => import('./routes/AcademicRoutes'));
+const VerifyDocument = lazy(() => import('./pages/VerifyDocument'));
 
 function RouteLoadingFallback() {
   return (
@@ -25,6 +27,12 @@ function RouteLoadingFallback() {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+
+  // Public document verification (QR codes on printed documents): no login required.
+  if (pathname.startsWith('/verify')) {
+    return <Suspense fallback={<RouteLoadingFallback />}><Routes><Route path="/verify/:code?" element={<VerifyDocument />} /><Route path="*" element={<VerifyDocument />} /></Routes></Suspense>;
+  }
 
   if (!user) return <Login />;
   if (user.must_change_password) return <ForcePasswordChange />;
@@ -36,6 +44,7 @@ function AppRoutes() {
   else if (user.role === 'student') RoleRoutes = StudentRoutes;
   else if (user.role === 'parent')  RoleRoutes = ParentRoutes;
   else if (user.role === 'finance_officer') RoleRoutes = FinanceRoutes;
+  else if (user.role === 'academic_officer') RoleRoutes = AcademicRoutes;
 
   if (!RoleRoutes) return <Routes><Route path="*" element={<Login />} /></Routes>;
 

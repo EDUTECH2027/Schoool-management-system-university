@@ -46,6 +46,12 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     '/email-alerts':      t.header.emailAlerts,
     '/discussion-forums': t.header.discussionForums,
     '/teacher-payment':   t.header.teacherPayment,
+    '/academics/structure': 'Academic structure', '/academics/catalogue': 'Course catalogue', '/academics/offerings': 'Course offerings',
+    '/academics/registration': 'Course registration', '/academics/results': 'Results validation', '/academics/exams': 'Examinations',
+    '/academics/progression': 'Progression & graduation', '/academics/documents': 'Official documents', '/academics/student-file': 'Student file',
+    '/academics/settings': 'Academic rules', '/academics/audit': 'Academic audit trail',
+    '/student/registration': 'Course registration', '/student/results': 'My results', '/student/exams': 'My exams', '/student/documents': 'My academic file',
+    '/teacher/courses': 'My courses', '/teacher/exams': 'Exams & invigilation',
     '/platform/dashboard':          'Super Admin Dashboard',
     '/platform/schools':            'Schools',
     '/platform/users':              'Users',
@@ -154,7 +160,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         </button>
 
         {/* Notifications */}
-        {user && ['teacher', 'student', 'super_admin', 'head_teacher'].includes(user.role) ? <NotificationBell /> : (
+        {user && ['teacher', 'student', 'super_admin', 'head_teacher', 'academic_officer'].includes(user.role) ? <NotificationBell /> : (
           <button className="relative hidden sm:inline-flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <Bell size={18} className="text-slate-600 dark:text-slate-300" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />

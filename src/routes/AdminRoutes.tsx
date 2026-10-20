@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazyPage, prefetchWhenIdle } from './lazyPage';
 import Layout          from '../composants/layout/Layout';
+import { academicRoutes } from './academicPages';
 const Dashboard = lazyPage(() => import('../pages/Dashboard'));
 const Students = lazyPage(() => import('../pages/Students'));
 const Classes = lazyPage(() => import('../pages/Classes'));
@@ -57,6 +58,7 @@ export default function AdminRoutes() {
         <Route path="finance/transactions"   element={<FinanceTransactions />} />
         <Route path="finance/reconciliation" element={<FinanceReconciliation />} />
         <Route path="finance/reports"        element={<FinanceReports />} />
+        {academicRoutes()}
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

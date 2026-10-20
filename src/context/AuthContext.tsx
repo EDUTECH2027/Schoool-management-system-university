@@ -5,7 +5,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'finance_officer' | 'platform_owner' | 'platform_admin';
+  role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'finance_officer' | 'academic_officer' | 'platform_owner' | 'platform_admin';
   initials: string;
   teacher_id?: string | null;
   student_id?: string | null;

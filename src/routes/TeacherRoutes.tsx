@@ -11,11 +11,13 @@ const TeacherTimetable = lazyPage(() => import('../pages/teacher/TeacherTimetabl
 const TeacherBehavior = lazyPage(() => import('../pages/teacher/TeacherBehavior'));
 const TeacherSalary = lazyPage(() => import('../pages/teacher/TeacherSalary'));
 const TeacherELearning = lazyPage(() => import('../pages/teacher/TeacherELearning'));
+const TeacherCourses = lazyPage(() => import('../pages/teacher/TeacherCourses'));
+const TeacherExams = lazyPage(() => import('../pages/teacher/TeacherExams'));
 const Classroom = lazyPage(() => import('../pages/elearning/Classroom'));
 
 // Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
 void TeacherDashboard.preload();
-prefetchWhenIdle([TeacherProfile, TeacherMyClass, TeacherMarks, TeacherAttendance, TeacherMyAttendance, TeacherTimetable, TeacherBehavior, TeacherSalary, TeacherELearning, Classroom]);
+prefetchWhenIdle([TeacherProfile, TeacherMyClass, TeacherMarks, TeacherAttendance, TeacherMyAttendance, TeacherTimetable, TeacherBehavior, TeacherSalary, TeacherELearning, Classroom, TeacherCourses, TeacherExams]);
 
 export default function TeacherRoutes() {
   return (
@@ -32,6 +34,8 @@ export default function TeacherRoutes() {
         <Route path="timetable"     element={<TeacherTimetable   />} />
         <Route path="behavior"      element={<TeacherBehavior    />} />
         <Route path="salary"        element={<TeacherSalary      />} />
+        <Route path="courses"          element={<TeacherCourses />} />
+        <Route path="exams"            element={<TeacherExams />} />
         <Route path="e-learning"       element={<TeacherELearning />} />
         <Route path="e-learning/room/:id" element={<Classroom />} />
       </Route>

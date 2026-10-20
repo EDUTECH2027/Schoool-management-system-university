@@ -157,3 +157,11 @@ body { margin: 0; font-family: system-ui, 'Segoe UI', sans-serif; font-size: 14p
 }
 .dark .skeleton { background: linear-gradient(90deg, #252525 25%, #2f2f2f 37%, #252525 63%); background-size: 200% 100%; }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+/* ── Printable official documents (portal-rendered .doc-print-root; everything else is hidden when printing) ── */
+@media print {
+  body:has(.doc-print-root) * { visibility: hidden !important; }
+  .doc-print-root, .doc-print-root * { visibility: visible !important; color: #111 !important; }
+  .doc-print-root { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; background: #fff !important; box-shadow: none !important; max-height: none !important; overflow: visible !important; }
+  .doc-print-root .no-print { display: none !important; }
+}
