@@ -532,7 +532,7 @@ function toQS(params?: Record<string, string>): string {
 // ── Minimal type stubs (mirrors existing types + API shapes) ─────────────────
 export interface AuthUser {
   id: string; name: string; email: string;
-  role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'finance_officer' | 'academic_officer' | 'platform_owner' | 'platform_admin';
+  role: 'super_admin' | 'head_teacher' | 'teacher' | 'student' | 'parent' | 'finance_officer' | 'academic_officer' | 'librarian' | 'platform_owner' | 'platform_admin';
   initials: string; teacher_id?: string | null; student_id?: string | null; parent_id?: string | null;
   must_change_password?: boolean;
 }

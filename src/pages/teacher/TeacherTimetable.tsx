@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import type { ScheduleEntry } from '../../api/client';
+import { CourseTimetable } from '../../composants/timetable/TimetableGrid';
 
 const DAYS = ['monday','tuesday','wednesday','thursday','friday'] as const;
 const PERIODS = ['p1','p2','p3','p4','p5','p6','p7'];
@@ -53,6 +54,7 @@ export default function TeacherTimetable() {
           </tbody>
         </table>
       </div>
+      <CourseTimetable kind="lecturer" />
     </div>
   );
 }

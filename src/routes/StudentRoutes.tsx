@@ -12,11 +12,17 @@ const StudentRegistration = lazyPage(() => import('../pages/student/StudentRegis
 const StudentResults = lazyPage(() => import('../pages/student/StudentResults'));
 const StudentExams = lazyPage(() => import('../pages/student/StudentExams'));
 const StudentDocuments = lazyPage(() => import('../pages/student/StudentDocuments'));
+const StudentAssessments = lazyPage(() => import('../pages/student/StudentAssessments'));
+const StudentServices = lazyPage(() => import('../pages/student/StudentServices'));
+const StudentLibrary = lazyPage(() => import('../pages/student/StudentLibrary'));
+const StudentCareers = lazyPage(() => import('../pages/student/StudentCareers'));
+const StudentThesis = lazyPage(() => import('../pages/student/StudentThesis'));
+const NotificationCenter = lazyPage(() => import('../pages/shared/NotificationCenter'));
 const Classroom = lazyPage(() => import('../pages/elearning/Classroom'));
 
 // Start the landing page's chunk immediately (in parallel with the layout), warm the rest when idle.
 void StudentDashboard.preload();
-prefetchWhenIdle([StudentProfile, StudentMarks, StudentAttendance, StudentTimetable, StudentFees, StudentELearning, Classroom, StudentRegistration, StudentResults, StudentExams, StudentDocuments]);
+prefetchWhenIdle([StudentProfile, StudentMarks, StudentAttendance, StudentTimetable, StudentFees, StudentELearning, Classroom, StudentRegistration, StudentResults, StudentExams, StudentDocuments, StudentAssessments, StudentServices, StudentLibrary, StudentCareers, StudentThesis, NotificationCenter]);
 
 export default function StudentRoutes() {
   return (
@@ -34,6 +40,12 @@ export default function StudentRoutes() {
         <Route path="results"      element={<StudentResults />} />
         <Route path="exams"        element={<StudentExams />} />
         <Route path="documents"    element={<StudentDocuments />} />
+        <Route path="assessments"  element={<StudentAssessments />} />
+        <Route path="services"     element={<StudentServices />} />
+        <Route path="library"      element={<StudentLibrary />} />
+        <Route path="careers"      element={<StudentCareers />} />
+        <Route path="thesis"       element={<StudentThesis />} />
+        <Route path="notifications" element={<NotificationCenter />} />
         <Route path="e-learning"  element={<StudentELearning />} />
         <Route path="e-learning/room/:id" element={<Classroom />} />
       </Route>

@@ -160,7 +160,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         </button>
 
         {/* Notifications */}
-        {user && ['teacher', 'student', 'super_admin', 'head_teacher', 'academic_officer'].includes(user.role) ? <NotificationBell /> : (
+        {user && ['teacher', 'student', 'super_admin', 'head_teacher', 'academic_officer', 'librarian', 'finance_officer'].includes(user.role) ? <NotificationBell /> : (
           <button className="relative hidden sm:inline-flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <Bell size={18} className="text-slate-600 dark:text-slate-300" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />

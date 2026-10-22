@@ -2,6 +2,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import PageSkeleton from '../ui/PageSkeleton';
+import AssistantWidget from '../assistant/AssistantWidget';
 import type { ReactNode } from 'react';
 
 interface Props {
@@ -35,6 +36,7 @@ export default function PortalLayout({ sidebar }: Props) {
           </Suspense>
         </main>
       </div>
+      <AssistantWidget />
     </div>
   );
 }

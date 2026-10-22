@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import PageSkeleton from '../ui/PageSkeleton';
+import AssistantWidget from '../assistant/AssistantWidget';
 
 export default function Layout() {
   const location = useLocation();
@@ -31,6 +32,7 @@ export default function Layout() {
           </Suspense>
         </main>
       </div>
+      <AssistantWidget />
     </div>
   );
 }

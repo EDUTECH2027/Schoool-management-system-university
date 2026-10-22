@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import type { ScheduleEntry } from '../../api/client';
+import { CourseTimetable } from '../../composants/timetable/TimetableGrid';
 
 const DAYS = ['monday','tuesday','wednesday','thursday','friday'] as const;
 
@@ -48,6 +49,7 @@ export default function StudentTimetable() {
           </tbody>
         </table>
       </div>
+      <CourseTimetable kind="student" />
     </div>
   );
 }

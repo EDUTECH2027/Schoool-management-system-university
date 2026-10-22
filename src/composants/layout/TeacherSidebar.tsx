@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, UserRound, Users, FileText, ClipboardCheck,
-  Calendar, MessageSquare, BadgeDollarSign, GraduationCap, LogOut, Video, BookOpen, CalendarClock,
+  Calendar, MessageSquare, BadgeDollarSign, GraduationCap, LogOut, Video, BookOpen, CalendarClock, ListChecks, BookMarked, Bell,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -21,6 +21,9 @@ export default function TeacherSidebar() {
     { label: t.portal.myClass,          to: '/teacher/my-class',      icon: Users            },
     { label: lang === 'fr' ? 'Mes cours' : 'My courses', to: '/teacher/courses', icon: BookOpen },
     { label: lang === 'fr' ? 'Examens' : 'Exams', to: '/teacher/exams', icon: CalendarClock },
+    { label: lang === 'fr' ? 'Devoirs & quiz' : 'Assignments & quizzes', to: '/teacher/assessments', icon: ListChecks },
+    { label: lang === 'fr' ? 'Mémoires encadrés' : 'Thesis supervision', to: '/teacher/thesis', icon: BookMarked },
+    { label: 'Notifications', to: '/teacher/notifications', icon: Bell },
     { label: t.portal.markEntry,        to: '/teacher/marks',         icon: FileText         },
     { label: t.portal.studentBehavior,  to: '/teacher/behavior',      icon: MessageSquare    },
     { label: t.nav.attendance,          to: '/teacher/attendance',    icon: ClipboardCheck   },

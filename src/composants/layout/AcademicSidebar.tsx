@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Layers, BookOpen, CalendarCheck, ClipboardSignature, FileCheck2, Settings2, CalendarClock, TrendingUp, FileBadge, UserSearch, ScrollText, GraduationCap, LogOut } from 'lucide-react';
+import { Layers, BookOpen, LifeBuoy, Library, DoorOpen, CalendarDays, Briefcase, BookMarked, BarChart3, Megaphone, ShieldCheck, Bell, CalendarCheck, ClipboardSignature, FileCheck2, Settings2, CalendarClock, TrendingUp, FileBadge, UserSearch, ScrollText, GraduationCap, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useBranding } from '../../context/BrandingContext';
@@ -19,6 +19,16 @@ export const academicNav = (fr: boolean) => [
   { label: fr ? 'Dossier étudiant' : 'Student file',          to: '/academics/student-file',  icon: UserSearch },
   { label: fr ? 'Règles académiques' : 'Academic rules',      to: '/academics/settings',      icon: Settings2 },
   { label: fr ? 'Journal d’audit' : 'Audit trail',            to: '/academics/audit',         icon: ScrollText },
+  { label: fr ? 'Guichet des demandes' : 'Service desk',      to: '/academics/services',      icon: LifeBuoy },
+  { label: fr ? 'Bibliothèque' : 'Library',                   to: '/academics/library',       icon: Library },
+  { label: fr ? 'Salles' : 'Rooms',                           to: '/academics/rooms',         icon: DoorOpen },
+  { label: fr ? 'Emploi du temps' : 'Timetable',              to: '/academics/timetable',     icon: CalendarDays },
+  { label: fr ? 'Carrières & alumni' : 'Careers & alumni',    to: '/academics/careers',       icon: Briefcase },
+  { label: fr ? 'Mémoires & thèses' : 'Thesis',               to: '/academics/thesis',        icon: BookMarked },
+  { label: fr ? 'Statistiques' : 'Analytics',                 to: '/academics/analytics',     icon: BarChart3 },
+  { label: fr ? 'Messages & annonces' : 'Broadcasts',         to: '/academics/broadcasts',    icon: Megaphone },
+  { label: fr ? 'Notifications' : 'Notifications',           to: '/academics/notifications', icon: Bell },
+  { label: fr ? 'Sécurité' : 'Security',                      to: '/academics/security',      icon: ShieldCheck },
 ];
 
 export default function AcademicSidebar() {

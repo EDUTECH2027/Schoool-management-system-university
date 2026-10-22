@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, UserRound, FileText, ClipboardCheck, Calendar, GraduationCap, Wallet, LogOut, Video, ClipboardSignature, Award, CalendarClock, FolderOpen,
+  LayoutDashboard, UserRound, FileText, ClipboardCheck, Calendar, GraduationCap, Wallet, LogOut, Video, ClipboardSignature, Award, CalendarClock, FolderOpen, ListChecks, LifeBuoy, Library, Briefcase, BookMarked, Bell,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -22,6 +22,12 @@ export default function StudentSidebar() {
     { label: lang === 'fr' ? 'Résultats & réclamations' : 'Results & appeals', to: '/student/results', icon: Award },
     { label: lang === 'fr' ? 'Mes examens' : 'My exams', to: '/student/exams', icon: CalendarClock },
     { label: lang === 'fr' ? 'Dossier & documents' : 'File & documents', to: '/student/documents', icon: FolderOpen },
+    { label: lang === 'fr' ? 'Devoirs & quiz' : 'Assignments & quizzes', to: '/student/assessments', icon: ListChecks },
+    { label: lang === 'fr' ? 'Mes demandes' : 'Service requests', to: '/student/services', icon: LifeBuoy },
+    { label: lang === 'fr' ? 'Bibliothèque' : 'Library', to: '/student/library', icon: Library },
+    { label: lang === 'fr' ? 'Carrières & alumni' : 'Careers & alumni', to: '/student/careers', icon: Briefcase },
+    { label: lang === 'fr' ? 'Mémoire / thèse' : 'My thesis', to: '/student/thesis', icon: BookMarked },
+    { label: 'Notifications', to: '/student/notifications', icon: Bell },
     { label: t.portal.myAttendanceRecord,to: '/student/attendance', icon: ClipboardCheck  },
     { label: t.portal.myTimetable,       to: '/student/timetable',  icon: Calendar        },
     { label: t.portal.myFees,            to: '/student/fees',       icon: Wallet          },

@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../api/client';
-import type { ElNotification } from '../../api/client';
+import { notif, type CenterNotification } from '../../api/notifications';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-// Real in-app notifications (class scheduled / rescheduled / cancelled / live / reminders / new materials).
+// Bell backed by the notification centre (/api/notification-center): unread count + latest items + link to the full page for the role.
+const centrePath = (role?: string) => (role === 'student' ? '/student/notifications' : role === 'teacher' ? '/teacher/notifications' : (role === 'parent' ? null : '/academics/notifications'));
 export default function NotificationBell() {
   const { lang } = useLanguage();
   const fr = lang === 'fr';
   const nav = useNavigate();
-  const [items, setItems] = useState<ElNotification[]>([]);
+  const { user } = useAuth();
+  const centre = centrePath(user?.role);
+  const [items, setItems] = useState<CenterNotification[]>([]);
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
-    try { const r = await api.elNotifications(); setItems(r.items); setUnread(r.unread); } catch { /* keep last state */ }
+    try { const r = await notif.list({ limit: 10 }); setItems(r.items); setUnread(r.unread); } catch { /* keep last state */ }
   }, []);
 
   useEffect(() => {
@@ -31,9 +34,9 @@ export default function NotificationBell() {
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const markAll = async () => { await api.elMarkRead().catch(() => {}); load(); };
-  const click = async (n: ElNotification) => {
-    if (!n.read_at) { await api.elMarkRead([n.id]).catch(() => {}); load(); }
+  const markAll = async () => { await notif.read().catch(() => {}); load(); };
+  const click = async (n: CenterNotification) => {
+    if (!n.read_at) { await notif.read([n.id]).catch(() => {}); load(); }
     if (n.link) { setOpen(false); nav(n.link); }
   };
 
@@ -64,6 +67,7 @@ export default function NotificationBell() {
               </li>
             ))}
           </ul>
+          {centre && <div className="border-t border-slate-100 dark:border-slate-700 px-4 py-2 text-center"><button onClick={() => { setOpen(false); nav(centre); }} className="text-xs text-indigo-600 hover:underline">{fr ? 'Ouvrir le centre de notifications' : 'Open notification centre'}</button></div>}
         </div>
       )}
     </div>
