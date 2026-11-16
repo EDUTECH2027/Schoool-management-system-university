@@ -105,7 +105,7 @@ export default function Sidebar() {
         {/* Academic affairs (course registration, results, exams, documents…) */}
         <div className="pt-4">
           <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-widest px-3 mb-2">{lang === 'fr' ? 'Affaires académiques' : 'Academic affairs'}</p>
-          {academicNav(lang === 'fr').map(({ label, to, icon: Icon }) => (
+          {academicNav(lang === 'fr').filter(item => item.to !== '/academics/timetable' /* already in the main menu */).map(({ label, to, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => clsx('flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors', isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white')}>
               <Icon size={17} />{label}
             </NavLink>
